@@ -1,7 +1,5 @@
 package SkyNetJR;
 
-import SkyNetJR.VirtualWorld.GenerationInfo;
-
 import java.util.Random;
 
 public class Settings {
@@ -25,7 +23,7 @@ public class Settings {
     }
 
     // World Simulation Settings
-    public static class SimulationSettings{
+    public static class SimulationSettings {
         public static final int TimePrecision = 50;
         public static final int BaseInfluence = 0;
         public static final double WaterInfluence = 30;
@@ -34,7 +32,7 @@ public class Settings {
     }
 
     // View Settings
-    public static class ViewSettings{
+    public static class ViewSettings {
         public static final int Width = 1280;
         public static final int Height = 720;
     }

@@ -1,7 +1,5 @@
 package SkyNetJR.VirtualWorld;
 
-import java.util.concurrent.Semaphore;
-
 public class VirtualWorld {
     private TileMap tileMap;
     private int timePrecision;
@@ -11,7 +9,7 @@ public class VirtualWorld {
 
     private WorldSimulationThread worldSimulationThread;
 
-    public VirtualWorld(TileMap tileMap, int timePrecision){
+    public VirtualWorld(TileMap tileMap, int timePrecision) {
         this.tileMap = tileMap;
         this.timePrecision = timePrecision;
 
@@ -48,8 +46,8 @@ public class VirtualWorld {
     public void setRunning(boolean running) {
         isRunning = running;
 
-        if (running){
-            synchronized (worldSimulationThread.StopLock){
+        if (running) {
+            synchronized (worldSimulationThread.StopLock) {
                 worldSimulationThread.StopLock.notify();
             }
 
@@ -64,5 +62,9 @@ public class VirtualWorld {
 
     public void setRealTime(boolean realTime) {
         this.realTime = realTime;
+    }
+
+    public void Destroy() {
+        worldSimulationThread.Destroy();
     }
 }

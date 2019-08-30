@@ -9,9 +9,10 @@ public class GenerationInfo {
     public int StartFrequencyX;
     public int StartFrequencyY;
 
-    public GenerationInfo(){ }
+    public GenerationInfo() {
+    }
 
-    public static GenerationInfo GetDefaults(){
+    public static GenerationInfo GetDefaults() {
         GenerationInfo g = new GenerationInfo();
         g.LandThreshold = Settings.GenerationSettings.LandThreshold;
         g.Seed = Settings.GenerationSettings.Seed;

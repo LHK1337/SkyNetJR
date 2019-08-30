@@ -1,7 +1,7 @@
-package SkyNetJR.Utils;
+package SkyNetJR.Rendering.Renderers;
 
 import SkyNetJR.Rendering.Renderer;
-import org.lwjgl.opengl.GL;
+import SkyNetJR.Utils.ValueNoise2D;
 import org.lwjgl.opengl.GL11;
 
 public class NoiseRenderer extends Renderer {
@@ -17,12 +17,17 @@ public class NoiseRenderer extends Renderer {
         GL11.glBegin(GL11.GL_POINTS);
 
         for (int x = 0; x < noise.WIDTH; x++) {
-            for(int y = 0; y < noise.HEIGHT; y++) {
+            for (int y = 0; y < noise.HEIGHT; y++) {
                 GL11.glColor3d(noise.getHeightMap()[x][y], noise.getHeightMap()[x][y], noise.getHeightMap()[x][y]);
                 GL11.glVertex2i(x, y);
             }
         }
 
         GL11.glEnd();
+    }
+
+    @Override
+    public void Destroy() {
+        // nothing to do
     }
 }

@@ -2,7 +2,6 @@ package SkyNetJR.Utils;
 
 import SkyNetJR.VirtualWorld.GenerationInfo;
 
-import java.util.List;
 import java.util.Random;
 
 public class ValueNoise2D {
@@ -14,14 +13,8 @@ public class ValueNoise2D {
     public int Octaves;
     public int StartFrequencyX;
     public int StartFrequencyY;
-
-    public double[][] getHeightMap() {
-        return heightMap;
-    }
-
     private double[][] heightMap;
     private Random random;
-
     public ValueNoise2D(int width, int height, GenerationInfo gI) {
         WIDTH = width;
         HEIGHT = height;
@@ -34,6 +27,7 @@ public class ValueNoise2D {
         heightMap = new double[width][height];
         random = new Random(Seed);
     }
+
     public ValueNoise2D(int width, int height, int octaves, int startFrequencyX, int startFrequencyY) {
         WIDTH = width;
         HEIGHT = height;
@@ -47,14 +41,28 @@ public class ValueNoise2D {
         random = new Random(Seed);
     }
 
-    public void Calculate(){
+    private static double CosineInterpolate(double a, double b, double t) {
+        double t2;
+        t2 = (1.0d - Math.cos(t * Math.PI)) / 2.0d;
+        return (a * (1.0d - t2) + b * t2);
+    }
+
+    private static double LinearInterpolate(double a, double b, double t) {
+        return (a * (1 - t) + b * t);
+    }
+
+    public double[][] getHeightMap() {
+        return heightMap;
+    }
+
+    public void Calculate() {
         int currentFreqX = StartFrequencyX;
         int currentFreqY = StartFrequencyY;
 
         double currentAlpha = Alpha;
 
-        for (int oc = 0; oc < Octaves; oc++){
-            if (oc > 0){
+        for (int oc = 0; oc < Octaves; oc++) {
+            if (oc > 0) {
                 currentFreqX *= 2;
                 currentFreqY *= 2;
                 currentAlpha /= 2;
@@ -69,12 +77,12 @@ public class ValueNoise2D {
             }
 
             for (int i = 0; i < WIDTH; i++) {
-                for (int j = 0; j < HEIGHT; j++){
-                    double currentX = (double)i /(double)WIDTH * (double)currentFreqX;
-                    double currentY = (double)j /(double)HEIGHT * (double)currentFreqY;
+                for (int j = 0; j < HEIGHT; j++) {
+                    double currentX = (double) i / (double) WIDTH * (double) currentFreqX;
+                    double currentY = (double) j / (double) HEIGHT * (double) currentFreqY;
 
-                    int indexX = (int)currentX;
-                    int indexY = (int)currentY;
+                    int indexX = (int) currentX;
+                    int indexY = (int) currentY;
 
                     double w0 = interpolate(discretePoints[indexX][indexY], discretePoints[indexX + 1][indexY], currentX - indexX);
                     double w1 = interpolate(discretePoints[indexX][indexY + 1], discretePoints[indexX + 1][indexY + 1], currentX - indexX);
@@ -86,7 +94,7 @@ public class ValueNoise2D {
         normalize();
     }
 
-    private void normalize(){
+    private void normalize() {
         double min = Double.MAX_VALUE;
 
         for (int i = 0; i < WIDTH; i++) {
@@ -118,17 +126,7 @@ public class ValueNoise2D {
         }
     }
 
-    private double interpolate(double a, double b, double t){
+    private double interpolate(double a, double b, double t) {
         return CosineInterpolate(a, b, t);
-    }
-
-    private static double CosineInterpolate(double a,double b,double t) {
-        double t2;
-        t2 = (1.0d - Math.cos(t * Math.PI)) / 2.0d;
-        return (a * (1.0d - t2) + b * t2);
-    }
-
-    private static double LinearInterpolate(double a,double b,double t) {
-        return (a * (1 - t) + b * t);
     }
 }

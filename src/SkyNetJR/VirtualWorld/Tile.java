@@ -4,7 +4,7 @@ public class Tile {
     public Double Energy;
     private TileType Type;
 
-    public Tile(double energy, TileType type){
+    public Tile(double energy, TileType type) {
         Energy = energy;
         Type = type;
     }

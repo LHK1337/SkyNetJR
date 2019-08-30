@@ -3,28 +3,24 @@ package SkyNetJR.VirtualWorld;
 import SkyNetJR.Settings;
 import SkyNetJR.Utils.ValueNoise2D;
 
-import java.util.Set;
-
 public class TileMap {
+    private final Object readyTilesNextSwapLock;
     private int width;
     private int height;
     private int tileSize;
     private GenerationInfo generationInfo;
     private double MaxEnergyPerTile;
     private double BaseEnergyGeneration;
-
     private Tile[][][] Tiles;
     private int readyTilesIndex;
-    private boolean readyTilesInUse;
-    private final Object readyTilesNextSwapLock;
-
+    private int readyTilesUseCount;
     private int latestTileMapIndex = 0;
 
     public TileMap() {
         readyTilesNextSwapLock = new Object();
     }
 
-    public void SetDefaults(){
+    public void SetDefaults() {
         width = Settings.WorldSettings.Width;
         height = Settings.WorldSettings.Height;
         tileSize = Settings.WorldSettings.TileSize;
@@ -51,11 +47,11 @@ public class TileMap {
         }
     }
 
-    public void Update(int deltaTime){
+    public void Update(int deltaTime) {
         int readFromTileMapIndex;
         int writeToTileMapIndex;
 
-        if (readyTilesIndex == latestTileMapIndex){
+        if (readyTilesIndex == latestTileMapIndex) {
             readFromTileMapIndex = readyTilesIndex;
             writeToTileMapIndex = 1 - readyTilesIndex;
         } else {
@@ -64,68 +60,69 @@ public class TileMap {
 
         for (int x = 0; x < width; x++) {
             for (int y = 0; y < height; y++) {
-                if (Tiles[readFromTileMapIndex][x][y].getType() != TileType.Water){
+                if (Tiles[readFromTileMapIndex][x][y].getType() != TileType.Water) {
                     double influence = Settings.SimulationSettings.BaseInfluence;
 
                     if (x > 0 && Tiles[readFromTileMapIndex][x - 1][y].getType() == TileType.Water)
                         influence += Settings.SimulationSettings.WaterInfluence;
-                    else if (x > 0 && Tiles[readFromTileMapIndex][x - 1][y].getType() == TileType.Land && Tiles[readFromTileMapIndex][x - 1][y].Energy >= MaxEnergyPerTile * Settings.SimulationSettings.TileInfluenceThreshold)
-                        {
-                            influence += Tiles[readFromTileMapIndex][x - 1][y].Energy / MaxEnergyPerTile * Settings.SimulationSettings.MaxGrownTileInfluence;
-                        }
+                    else if (x > 0 && Tiles[readFromTileMapIndex][x - 1][y].getType() == TileType.Land && Tiles[readFromTileMapIndex][x - 1][y].Energy >= MaxEnergyPerTile * Settings.SimulationSettings.TileInfluenceThreshold) {
+                        influence += Tiles[readFromTileMapIndex][x - 1][y].Energy / MaxEnergyPerTile * Settings.SimulationSettings.MaxGrownTileInfluence;
+                    }
 
                     if (y > 0 && Tiles[readFromTileMapIndex][x][y - 1].getType() == TileType.Water)
                         influence += Settings.SimulationSettings.WaterInfluence;
-                    else if (y > 0 && Tiles[readFromTileMapIndex][x][y - 1].getType() == TileType.Land && Tiles[readFromTileMapIndex][x][y - 1].Energy >= MaxEnergyPerTile * Settings.SimulationSettings.TileInfluenceThreshold)
-                    {
+                    else if (y > 0 && Tiles[readFromTileMapIndex][x][y - 1].getType() == TileType.Land && Tiles[readFromTileMapIndex][x][y - 1].Energy >= MaxEnergyPerTile * Settings.SimulationSettings.TileInfluenceThreshold) {
                         influence += Tiles[readFromTileMapIndex][x][y - 1].Energy / MaxEnergyPerTile * Settings.SimulationSettings.MaxGrownTileInfluence;
                     }
 
                     if (x < width - 1 && Tiles[readFromTileMapIndex][x + 1][y].getType() == TileType.Water)
                         influence += Settings.SimulationSettings.WaterInfluence;
-                    else if (x < width - 1 && Tiles[readFromTileMapIndex][x + 1][y].getType() == TileType.Land && Tiles[readFromTileMapIndex][x + 1][y].Energy >= MaxEnergyPerTile * Settings.SimulationSettings.TileInfluenceThreshold)
-                    {
+                    else if (x < width - 1 && Tiles[readFromTileMapIndex][x + 1][y].getType() == TileType.Land && Tiles[readFromTileMapIndex][x + 1][y].Energy >= MaxEnergyPerTile * Settings.SimulationSettings.TileInfluenceThreshold) {
                         influence += Tiles[readFromTileMapIndex][x + 1][y].Energy / MaxEnergyPerTile * Settings.SimulationSettings.MaxGrownTileInfluence;
                     }
 
                     if (y < height - 1 && Tiles[readFromTileMapIndex][x][y + 1].getType() == TileType.Water)
                         influence += Settings.SimulationSettings.WaterInfluence;
-                    else if (y < height - 1 && Tiles[readFromTileMapIndex][x][y + 1].getType() == TileType.Land && Tiles[readFromTileMapIndex][x][y + 1].Energy >= MaxEnergyPerTile * Settings.SimulationSettings.TileInfluenceThreshold)
-                    {
+                    else if (y < height - 1 && Tiles[readFromTileMapIndex][x][y + 1].getType() == TileType.Land && Tiles[readFromTileMapIndex][x][y + 1].Energy >= MaxEnergyPerTile * Settings.SimulationSettings.TileInfluenceThreshold) {
                         influence += Tiles[readFromTileMapIndex][x][y + 1].Energy / MaxEnergyPerTile * Settings.SimulationSettings.MaxGrownTileInfluence;
                     }
 
-                    Tiles[writeToTileMapIndex][x][y].Energy = Tiles[readFromTileMapIndex][x][y].Energy + BaseEnergyGeneration * influence * ((double)deltaTime / 1000d);
+                    Tiles[writeToTileMapIndex][x][y].Energy = Tiles[readFromTileMapIndex][x][y].Energy + BaseEnergyGeneration * influence * ((double) deltaTime / 1000d);
 
-                    if (Tiles[writeToTileMapIndex][x][y].Energy > MaxEnergyPerTile) Tiles[writeToTileMapIndex][x][y].Energy = MaxEnergyPerTile;
+                    if (Tiles[writeToTileMapIndex][x][y].Energy > MaxEnergyPerTile)
+                        Tiles[writeToTileMapIndex][x][y].Energy = MaxEnergyPerTile;
                 }
             }
         }
 
         latestTileMapIndex = writeToTileMapIndex;
 
-        if (!readyTilesInUse)
+        if (readyTilesUseCount == 0)
             SwapReadyTiles();
     }
 
-    private void SwapReadyTiles(){
+    public void AcquireUse() {
+        readyTilesUseCount++;
+    }
+
+    public void ReleaseUse() {
+        readyTilesUseCount--;
+    }
+
+    private void SwapReadyTiles() {
         readyTilesIndex = 1 - readyTilesIndex;
-        synchronized (readyTilesNextSwapLock){
+        synchronized (readyTilesNextSwapLock) {
             readyTilesNextSwapLock.notifyAll();
         }
     }
 
     public void WaitForNextSwap() throws InterruptedException {
-        synchronized (readyTilesNextSwapLock){
+        synchronized (readyTilesNextSwapLock) {
             readyTilesNextSwapLock.wait();
         }
     }
 
-    public void setReadyTilesInUse(boolean readyTilesInUse) {
-        this.readyTilesInUse = readyTilesInUse;
-    }
-
-    public Tile[][] getReadyTiles(){
+    public Tile[][] getReadyTiles() {
         return Tiles[readyTilesIndex];
     }
 

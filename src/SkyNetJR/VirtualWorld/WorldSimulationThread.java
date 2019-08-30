@@ -1,32 +1,20 @@
 package SkyNetJR.VirtualWorld;
 
+import SkyNetJR.Utils.DestroyableThread;
 import SkyNetJR.Utils.Timer;
 
-public class WorldSimulationThread extends Thread {
-    private VirtualWorld world;
-    private boolean destroy;
-    private Object destroyedHandle;
+public class WorldSimulationThread extends DestroyableThread {
     public final Object StopLock;
+    private VirtualWorld world;
 
-    public WorldSimulationThread(VirtualWorld w){
+    public WorldSimulationThread(VirtualWorld w) {
         StopLock = new Object();
         world = w;
-        destroy = false;
-        destroyedHandle = new Object();
-    }
-
-    public void Destroy(){
-        destroy = true;
-        try {
-            destroyedHandle.wait(3000);
-            if (this.getState() != State.TERMINATED)
-                this.interrupt();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
     }
 
     public void run() {
+        Thread.currentThread().setName("SimulationThread - " + world.toString());
+
         Timer t = new Timer();
 
         while (true) {
@@ -36,7 +24,9 @@ public class WorldSimulationThread extends Thread {
                 }
 
                 if (destroy) {
-                    destroyedHandle.notifyAll();
+                    synchronized (destroyedHandle) {
+                        destroyedHandle.notifyAll();
+                    }
                     return;
                 }
 

@@ -1,36 +1,37 @@
 package SkyNetJR.Rendering;
 
-import java.util.List;
-
 import SkyNetJR.GLFWWindowManager.WindowManager;
-import org.lwjgl.opengl.*;
+import SkyNetJR.Utils.DestroyableThread;
+import org.lwjgl.opengl.GL;
+import org.lwjgl.opengl.GL11;
+
+import java.util.List;
 
 import static org.lwjgl.glfw.GLFW.*;
 
-public class RenderThread extends Thread {
+public class RenderThread extends DestroyableThread {
     private final View view;
-    private boolean destroy;
-    private final Object destroyedHandle;
-    private boolean usingVSync;
+    private boolean useVSync;
 
     private long windowHandle;
-    private WindowManager wm;
+    private WindowManager windowManager;
 
     public RenderThread(View view, WindowManager wm) {
         this.view = view;
-        this.wm = wm;
-        destroyedHandle = new Object();
+        this.windowManager = wm;
     }
 
     @Override
-    public void run(){
-        windowHandle = wm.CreateNewWindow(view.getWIDTH(), view.getHEIGHT(), view.getTitle(), null, false, false);
+    public void run() {
+        Thread.currentThread().setName("RenderThread - " + view.toString());
+
+        windowHandle = windowManager.CreateNewWindow(view.getWIDTH(), view.getHEIGHT(), view.getTitle(), null, false, false);
 
         glfwMakeContextCurrent(windowHandle);
         GL.createCapabilities();
 
-        usingVSync = view.isUseVSync();
-        glfwSwapInterval(usingVSync ? 1 : 0);
+        useVSync = view.isUseVSync();
+        glfwSwapInterval(useVSync ? 1 : 0);
 
         GL11.glMatrixMode(GL11.GL_PROJECTION);
         GL11.glViewport(0, 0, view.getWIDTH(), view.getHEIGHT());
@@ -42,47 +43,35 @@ public class RenderThread extends Thread {
         while (true) {
             if (glfwWindowShouldClose(windowHandle)) {
                 destroy = true;
-                wm.DestroyWindow(windowHandle);
+                windowManager.DestroyWindow(windowHandle);
 
-                Runnable cleanUpTask = view::Destroy;
+                Thread cleanUpThread = new Thread(() -> {
+                    Thread.currentThread().setName("CleanUpThread");
+                    view.Destroy();
+                });
+                cleanUpThread.start();
             }
 
-            if (destroy){
+            if (destroy) {
                 synchronized (destroyedHandle) {
-                destroyedHandle.notifyAll();
+                    destroyedHandle.notifyAll();
                 }
                 return;
             }
 
-            if (usingVSync != view.isUseVSync())
-            {
-                usingVSync = view.isUseVSync();
-                glfwSwapInterval(usingVSync ? 1 : 0);
+            if (useVSync != view.isUseVSync()) {
+                useVSync = view.isUseVSync();
+                glfwSwapInterval(useVSync ? 1 : 0);
             }
 
             List<Renderer> r = view.getRenderers();
 
-            for (int i = 0; i < r.size(); i++){
+            for (int i = 0; i < r.size(); i++) {
                 r.get(i).Render(0, 0);
             }
 
             glfwSwapBuffers(windowHandle);
             glfwPollEvents();
         }
-    }
-
-    public void Destroy(){
-        destroy = true;
-        try {
-            destroyedHandle.wait(3000);
-            if (this.getState() != State.TERMINATED)
-                this.interrupt();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public Object getDestroyedHandle() {
-        return destroyedHandle;
     }
 }

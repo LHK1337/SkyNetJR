@@ -1,24 +1,23 @@
 package SkyNetJR.Main;
 
 import SkyNetJR.GLFWWindowManager.WindowManager;
+import SkyNetJR.Rendering.Renderers.VirtualWorldRenderer;
 import SkyNetJR.Rendering.View;
 import SkyNetJR.Settings;
-import SkyNetJR.Utils.NoiseRenderer;
-import SkyNetJR.Utils.ValueNoise2D;
-import SkyNetJR.VirtualWorld.GenerationInfo;
 import SkyNetJR.VirtualWorld.TileMap;
 import SkyNetJR.VirtualWorld.VirtualWorld;
-import SkyNetJR.VirtualWorld.VirtualWorldRenderer;
 
 public class Main {
     private static Object Lock = new Object();
 
-    public static void main(String[] args){
+    public static void main(String[] args) {
+        Thread.currentThread().setName("MainThread");
+
         WindowManager wm = new WindowManager();
         wm.Init();
 
         // create World view
-        View worldView = new View(Settings.ViewSettings.Width, Settings.ViewSettings.Height, "SkyNetJR" , wm);
+        View worldView = new View(Settings.ViewSettings.Width, Settings.ViewSettings.Height, "SkyNetJR", wm);
 
         TileMap map = new TileMap();
         map.SetDefaults();
@@ -35,12 +34,14 @@ public class Main {
 
         worldView.Start();
 
-        while (!worldView.getDestroyed()){
+        while (!worldView.getDestroyed()) {
             try {
                 Thread.sleep(500);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }
+
+        wm.Destroy();
     }
 }

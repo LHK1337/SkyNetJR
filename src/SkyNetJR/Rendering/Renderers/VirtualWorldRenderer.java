@@ -1,6 +1,10 @@
-package SkyNetJR.VirtualWorld;
+package SkyNetJR.Rendering.Renderers;
 
 import SkyNetJR.Rendering.Renderer;
+import SkyNetJR.VirtualWorld.Tile;
+import SkyNetJR.VirtualWorld.TileMap;
+import SkyNetJR.VirtualWorld.TileType;
+import SkyNetJR.VirtualWorld.VirtualWorld;
 import org.lwjgl.opengl.GL11;
 
 public class VirtualWorldRenderer extends Renderer {
@@ -18,11 +22,11 @@ public class VirtualWorldRenderer extends Renderer {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        map.setReadyTilesInUse(true);
+        map.AcquireUse();
         Tile[][] t = map.getReadyTiles();
 
         for (int x = 0; x < t.length; x++)
-            for (int y = 0; y < t[x].length; y++){
+            for (int y = 0; y < t[x].length; y++) {
 
                 if (t[x][y].getType() == TileType.Water)
                     GL11.glColor3d(0d, 0d, 1d);
@@ -38,7 +42,12 @@ public class VirtualWorldRenderer extends Renderer {
                 GL11.glEnd();
             }
 
-        map.setReadyTilesInUse(false);
+        map.ReleaseUse();
+    }
+
+    @Override
+    public void Destroy() {
+        world.Destroy();
     }
 
     public VirtualWorld getWorld() {

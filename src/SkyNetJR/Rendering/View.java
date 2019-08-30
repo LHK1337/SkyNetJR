@@ -11,15 +11,9 @@ public class View {
     private final String title;
 
     private boolean Destroyed;
-
-    public boolean getDestroyed(){
-        return Destroyed;
-    }
-
     private List<Renderer> renderers;
     private boolean useVSync;
-
-    RenderThread renderThread;
+    private RenderThread renderThread;
 
     public View(int width, int height, String title, WindowManager wm) {
         WIDTH = width;
@@ -31,7 +25,11 @@ public class View {
         renderThread = new RenderThread(this, wm);
     }
 
-    public void Start(){
+    public boolean getDestroyed() {
+        return Destroyed;
+    }
+
+    public void Start() {
         renderThread.start();
     }
 
@@ -39,8 +37,13 @@ public class View {
         return renderers;
     }
 
-    public void Destroy(){
+    public void Destroy() {
         renderThread.Destroy();
+
+        for (Renderer renderer : renderers) {
+            renderer.Destroy();
+        }
+
         renderers.clear();
         Destroyed = true;
     }

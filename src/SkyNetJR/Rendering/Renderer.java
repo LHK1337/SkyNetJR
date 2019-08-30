@@ -8,6 +8,8 @@ public abstract class Renderer {
 
     public abstract void Render(int offsetX, int offsetY);
 
+    public abstract void Destroy();
+
     public int getPositionX() {
         return positionX;
     }

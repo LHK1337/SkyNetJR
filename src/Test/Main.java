@@ -3,7 +3,7 @@ package Test;
 import SkyNetJR.GLFWWindowManager.WindowManager;
 
 public class Main {
-    public static void main(String[] args){
+    public static void main(String[] args) {
         WindowManager wm = new WindowManager();
         wm.Init();
 
