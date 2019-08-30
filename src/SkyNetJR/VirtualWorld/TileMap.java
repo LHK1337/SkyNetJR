@@ -3,6 +3,8 @@ package SkyNetJR.VirtualWorld;
 import SkyNetJR.Settings;
 import SkyNetJR.Utils.ValueNoise2D;
 
+import java.util.Random;
+
 public class TileMap {
     private final Object readyTilesNextSwapLock;
     private int width;
@@ -16,7 +18,62 @@ public class TileMap {
     private int readyTilesUseCount;
     private int latestTileMapIndex = 0;
 
+    private Random random;
+
+    public static TileType[] getNeighbourTypes(Tile[][] t, int x, int y){
+        TileType[] neighbours = new TileType[4];
+
+        if (x > 0)
+        {
+            neighbours[0] = t[x - 1][y].getType() == TileType.Water ? TileType.Water : TileType.Land;
+        } else neighbours[0] = null;
+
+        if (y > 0)
+        {
+            neighbours[1] = t[x][y - 1].getType() == TileType.Water ? TileType.Water : TileType.Land;
+        } else neighbours[1] = null;
+
+        if (x < t.length - 1)
+        {
+            neighbours[2] = t[x + 1][y].getType() == TileType.Water ? TileType.Water : TileType.Land;
+        } else neighbours[2] = null;
+
+        if (y < t[x].length - 1)
+        {
+            neighbours[3] = t[x][y + 1].getType() == TileType.Water ? TileType.Water : TileType.Land;
+        } else neighbours[3] = null;
+
+        return neighbours;
+    }
+
+    public static Double[] getNeighbourEnergy(Tile[][] t, int x, int y){
+        Double[] neighbours = new Double[4];
+
+        if (x > 0)
+        {
+            neighbours[0] = t[x - 1][y].Energy;
+        } else neighbours[0] = null;
+
+        if (y > 0)
+        {
+            neighbours[1] = t[x][y - 1].Energy;
+        } else neighbours[1] = null;
+
+        if (x < t.length - 1)
+        {
+            neighbours[2] = t[x + 1][y].Energy;
+        } else neighbours[2] = null;
+
+        if (y < t[x].length - 1)
+        {
+            neighbours[3] = t[x][y + 1].Energy;
+        } else neighbours[3] = null;
+
+        return neighbours;
+    }
+
     public TileMap() {
+        random = new Random();
         readyTilesNextSwapLock = new Object();
     }
 
@@ -60,37 +117,29 @@ public class TileMap {
 
         for (int x = 0; x < width; x++) {
             for (int y = 0; y < height; y++) {
-                if (Tiles[readFromTileMapIndex][x][y].getType() != TileType.Water) {
+                if (Tiles[readFromTileMapIndex][x][y].getType() != TileType.Water && Tiles[readFromTileMapIndex][x][y].Energy != MaxEnergyPerTile) {
                     double influence = Settings.SimulationSettings.BaseInfluence;
 
-                    if (x > 0 && Tiles[readFromTileMapIndex][x - 1][y].getType() == TileType.Water)
-                        influence += Settings.SimulationSettings.WaterInfluence;
-                    else if (x > 0 && Tiles[readFromTileMapIndex][x - 1][y].getType() == TileType.Land && Tiles[readFromTileMapIndex][x - 1][y].Energy >= MaxEnergyPerTile * Settings.SimulationSettings.TileInfluenceThreshold) {
-                        influence += Tiles[readFromTileMapIndex][x - 1][y].Energy / MaxEnergyPerTile * Settings.SimulationSettings.MaxGrownTileInfluence;
-                    }
+                    TileType[] nT = getNeighbourTypes(Tiles[readFromTileMapIndex], x, y);
+                    Double[] nE = getNeighbourEnergy(Tiles[readFromTileMapIndex], x, y);
 
-                    if (y > 0 && Tiles[readFromTileMapIndex][x][y - 1].getType() == TileType.Water)
-                        influence += Settings.SimulationSettings.WaterInfluence;
-                    else if (y > 0 && Tiles[readFromTileMapIndex][x][y - 1].getType() == TileType.Land && Tiles[readFromTileMapIndex][x][y - 1].Energy >= MaxEnergyPerTile * Settings.SimulationSettings.TileInfluenceThreshold) {
-                        influence += Tiles[readFromTileMapIndex][x][y - 1].Energy / MaxEnergyPerTile * Settings.SimulationSettings.MaxGrownTileInfluence;
-                    }
-
-                    if (x < width - 1 && Tiles[readFromTileMapIndex][x + 1][y].getType() == TileType.Water)
-                        influence += Settings.SimulationSettings.WaterInfluence;
-                    else if (x < width - 1 && Tiles[readFromTileMapIndex][x + 1][y].getType() == TileType.Land && Tiles[readFromTileMapIndex][x + 1][y].Energy >= MaxEnergyPerTile * Settings.SimulationSettings.TileInfluenceThreshold) {
-                        influence += Tiles[readFromTileMapIndex][x + 1][y].Energy / MaxEnergyPerTile * Settings.SimulationSettings.MaxGrownTileInfluence;
-                    }
-
-                    if (y < height - 1 && Tiles[readFromTileMapIndex][x][y + 1].getType() == TileType.Water)
-                        influence += Settings.SimulationSettings.WaterInfluence;
-                    else if (y < height - 1 && Tiles[readFromTileMapIndex][x][y + 1].getType() == TileType.Land && Tiles[readFromTileMapIndex][x][y + 1].Energy >= MaxEnergyPerTile * Settings.SimulationSettings.TileInfluenceThreshold) {
-                        influence += Tiles[readFromTileMapIndex][x][y + 1].Energy / MaxEnergyPerTile * Settings.SimulationSettings.MaxGrownTileInfluence;
+                    for (int i = 0; i < nT.length; i++) {
+                        if (nT[i] == TileType.Water) influence += Settings.SimulationSettings.WaterInfluence;
+                        else if (nT[i] == TileType.Land && nE[i] >= MaxEnergyPerTile * Settings.SimulationSettings.TileInfluenceThreshold) {
+                            influence += nE[i] / MaxEnergyPerTile * Settings.SimulationSettings.OutGrownTileInfluence;
+                        }
                     }
 
                     Tiles[writeToTileMapIndex][x][y].Energy = Tiles[readFromTileMapIndex][x][y].Energy + BaseEnergyGeneration * influence * ((double) deltaTime / 1000d);
 
+                    if (random.nextDouble() <= Settings.WorldSettings.RandomEnergyGenerationChance)
+                        Tiles[writeToTileMapIndex][x][y].Energy += Settings.WorldSettings.RandomEnergyGeneration;
+
                     if (Tiles[writeToTileMapIndex][x][y].Energy > MaxEnergyPerTile)
                         Tiles[writeToTileMapIndex][x][y].Energy = MaxEnergyPerTile;
+
+                    else if (Tiles[writeToTileMapIndex][x][y].Energy < 0)
+                        Tiles[writeToTileMapIndex][x][y].Energy = 0.0d;
                 }
             }
         }
