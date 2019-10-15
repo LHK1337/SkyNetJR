@@ -2,7 +2,9 @@ package SkyNetJR.VirtualWorld;
 
 import SkyNetJR.Settings;
 import SkyNetJR.Utils.ValueNoise2D;
+import org.lwjglx.debug.org.eclipse.jetty.util.BlockingArrayQueue;
 
+import java.util.Queue;
 import java.util.Random;
 
 public class TileMap {
@@ -17,6 +19,7 @@ public class TileMap {
     private int readyTilesIndex;
     private int readyTilesUseCount;
     private int latestTileMapIndex = 0;
+    private Queue<EnergyChange> EnergyChanges = new BlockingArrayQueue<>();
 
     private Random random;
 
@@ -82,8 +85,8 @@ public class TileMap {
         height = Settings.WorldSettings.Height;
         tileSize = Settings.WorldSettings.TileSize;
         generationInfo = GenerationInfo.GetDefaults();
-        MaxEnergyPerTile = Settings.WorldSettings.MaxEnergyPerTile;
-        BaseEnergyGeneration = Settings.WorldSettings.BaseEnergyGeneration;
+        MaxEnergyPerTile = Settings.SimulationSettings.MaxEnergyPerTile;
+        BaseEnergyGeneration = Settings.SimulationSettings.BaseEnergyGeneration;
     }
 
     public void Generate() {
@@ -97,8 +100,8 @@ public class TileMap {
 
             for (int x = 0; x < width; x++) {
                 for (int y = 0; y < height; y++) {
-                    Tiles[0][x][y] = new Tile(Settings.WorldSettings.StartEnergy, heightMap[x][y] <= generationInfo.LandThreshold ? TileType.Land : TileType.Water);
-                    Tiles[1][x][y] = new Tile(Settings.WorldSettings.StartEnergy, heightMap[x][y] <= generationInfo.LandThreshold ? TileType.Land : TileType.Water);
+                    Tiles[0][x][y] = new Tile(Settings.SimulationSettings.StartEnergy, heightMap[x][y] <= generationInfo.LandThreshold ? TileType.Land : TileType.Water);
+                    Tiles[1][x][y] = new Tile(Settings.SimulationSettings.StartEnergy, heightMap[x][y] <= generationInfo.LandThreshold ? TileType.Land : TileType.Water);
                 }
             }
         }
@@ -113,6 +116,21 @@ public class TileMap {
             writeToTileMapIndex = 1 - readyTilesIndex;
         } else {
             writeToTileMapIndex = readFromTileMapIndex = latestTileMapIndex;
+        }
+
+        while (!EnergyChanges.isEmpty()) {
+            EnergyChange ec = EnergyChanges.poll();
+
+            double te = Tiles[readFromTileMapIndex][ec.X][ec.Y].Energy;
+
+            te += ec.Energy;
+
+            if (te < 0) {
+                //TODO: Fix
+                //! WARNING MUTED
+                //System.out.println("[WARNING] Enqueued EnergyChange drains more Energy than possible.");
+                Tiles[readFromTileMapIndex][ec.X][ec.Y].Energy = 0d;
+            }else Tiles[readFromTileMapIndex][ec.X][ec.Y].Energy = te;
         }
 
         for (int x = 0; x < width; x++) {
@@ -132,8 +150,8 @@ public class TileMap {
 
                     Tiles[writeToTileMapIndex][x][y].Energy = Tiles[readFromTileMapIndex][x][y].Energy + BaseEnergyGeneration * influence * ((double) deltaTime / 1000d);
 
-                    if (random.nextDouble() <= Settings.WorldSettings.RandomEnergyGenerationChance)
-                        Tiles[writeToTileMapIndex][x][y].Energy += Settings.WorldSettings.RandomEnergyGeneration;
+                    if (random.nextDouble() <= Settings.SimulationSettings.RandomEnergyGenerationChance)
+                        Tiles[writeToTileMapIndex][x][y].Energy += Settings.SimulationSettings.RandomEnergyGeneration;
 
                     if (Tiles[writeToTileMapIndex][x][y].Energy > MaxEnergyPerTile)
                         Tiles[writeToTileMapIndex][x][y].Energy = MaxEnergyPerTile;
@@ -173,6 +191,10 @@ public class TileMap {
 
     public Tile[][] getReadyTiles() {
         return Tiles[readyTilesIndex];
+    }
+
+    public void EnqueueEnergyChange(int x, int y, double energy){
+        EnergyChanges.add(new EnergyChange(x, y, energy));
     }
 
     public int getWidth() {

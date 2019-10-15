@@ -21,6 +21,8 @@ public class Timer {
         return this.endTime;
     }
 
+    public long getCurrentTime() { return System.currentTimeMillis() - this.startTime; }
+
     public long getTotalTime() {
         return this.endTime - this.startTime;
     }

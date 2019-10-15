@@ -13,7 +13,7 @@ public class WorldSimulationThread extends DestroyableThread {
     }
 
     public void run() {
-        Thread.currentThread().setName("SimulationThread - " + world.toString());
+        Thread.currentThread().setName("WorldSimulationThread - " + world.toString());
 
         Timer t = new Timer();
 

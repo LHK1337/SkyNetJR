@@ -1,6 +1,8 @@
 package SkyNetJR.Main;
 
+import SkyNetJR.Creatures.Population;
 import SkyNetJR.GLFWWindowManager.WindowManager;
+import SkyNetJR.Rendering.Renderers.PopulationRenderer;
 import SkyNetJR.Rendering.Renderers.VirtualWorldRenderer;
 import SkyNetJR.Rendering.View;
 import SkyNetJR.Settings;
@@ -26,6 +28,14 @@ public class Main {
         world.setRunning(true);
 
         worldView.getRenderers().add(new VirtualWorldRenderer(world));
+
+        Population population = new Population(world, Settings.SimulationSettings.TimePrecision);
+        population.FillPopulation();
+        population.setRunning(true);
+
+        worldView.getRenderers().add(new PopulationRenderer(population));
+
+
 
 //        ValueNoise2D noise = new ValueNoise2D(1280, 720, GenerationInfo.GetDefaults());
 //        noise.Calculate();

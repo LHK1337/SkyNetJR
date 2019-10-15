@@ -2,8 +2,8 @@ package SkyNetJR.VirtualWorld;
 
 public class VirtualWorld {
     private TileMap tileMap;
-    private int timePrecision;
     private long lastSimulatedFrameTime;
+    private int timePrecision;
     private boolean isRunning;
     private boolean realTime;
 

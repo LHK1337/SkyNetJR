@@ -1,6 +1,8 @@
 package SkyNetJR.VirtualWorld;
 
 public class Tile {
+    public static final Tile Void = new Tile(0, TileType.Water);
+
     public Double Energy;
     private TileType Type;
 

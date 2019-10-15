@@ -3,6 +3,8 @@ package SkyNetJR.Rendering;
 public abstract class Renderer {
     protected int positionX;
     protected int positionY;
+
+    //TODO: implement scaling
     protected double scaleX;
     protected double scaleY;
 
