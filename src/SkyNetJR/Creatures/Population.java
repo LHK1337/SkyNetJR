@@ -77,11 +77,9 @@ public class Population {
 
         this.timePrecision = timePrecision;
         World = world;
-        CollisionGrid = new List[world.getTileMap().getWidth() * world.getTileMap().getTileSize() / Settings.CreatureSettings.CreatureSize][world.getTileMap().getHeight() * world.getTileMap().getTileSize() / Settings.CreatureSettings.CreatureSize];
+        CollisionGrid = new List[(world.getTileMap().getWidth() * world.getTileMap().getTileSize() / Settings.CreatureSettings.CreatureSize) + 1][(world.getTileMap().getHeight() * world.getTileMap().getTileSize() / Settings.CreatureSettings.CreatureSize) + 1];
         for (int x = 0; x < CollisionGrid.length; x++) {
-            for (int y = 0; y < CollisionGrid[x].length; y++) {
-                CollisionGrid[x][y] = new ArrayList();
-            }
+            Arrays.fill(CollisionGrid[x], new ArrayList());
         }
     }
 
@@ -112,12 +110,12 @@ public class Population {
     }
 
     public Creature getCollidingCreature(int positionX, int positionY) {
-        if (positionX < 0 || positionY < 0 || positionX >= World.getTileMap().getWidth() * World.getTileMap().getTileSize() || positionY >= World.getTileMap().getHeight() * World.getTileMap().getTileSize())
+        if (positionX < 0 || positionY < 0 || positionX > World.getTileMap().getWidth() * World.getTileMap().getTileSize() || positionY > World.getTileMap().getHeight() * World.getTileMap().getTileSize())
             return null;
 
         List cs = CollisionGrid[positionX / Settings.CreatureSettings.CreatureSize][positionY / Settings.CreatureSettings.CreatureSize];
 
-        if (cs.size() == 0) return null;
+        if (cs == null || cs.size() == 0) return null;
         else {
             return (Creature) cs.get(new Random().nextInt(cs.size()));
         }

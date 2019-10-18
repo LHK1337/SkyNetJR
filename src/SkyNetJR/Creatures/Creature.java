@@ -31,6 +31,8 @@ public class Creature {
 
     private Vector3d Genetics;
 
+    private double SpecificAgingFactor;
+
     private final long Generation;
     private int PositionX;
     private int PositionY;
@@ -67,7 +69,7 @@ public class Creature {
         Generation = parent.Generation + 1;
         Population = parent.Population;
         SetDefaults();
-        InheritFromParen(parent);
+        InheritFromParent(parent);
 
         Genetics = new Vector3d(parent.Genetics.x, parent.Genetics.y, parent.Genetics.z);
 
@@ -76,7 +78,7 @@ public class Creature {
         MutateBrain();
     }
 
-    private void InheritFromParen(Creature parent){
+    private void InheritFromParent(Creature parent){
         Energy.setValue(Settings.CreatureSettings.EnergyDrainPerReplication);
         PositionX = parent.PositionX;
         PositionY = parent.PositionY;
@@ -134,8 +136,11 @@ public class Creature {
 
         brain.AddInput(Energy, false);
         brain.AddInput(Age, false);
-        brain.AddInput(EnergyOnCurrentTile, false);
-        brain.AddInput(CurrentTileWater, false);
+        if (Settings.CreatureSettings.CanFeelOnBody)
+        {
+            brain.AddInput(EnergyOnCurrentTile, false);
+            brain.AddInput(CurrentTileWater, false);
+        }
         brain.AddInput(WasAttacked, false);
         brain.AddInput(WasHealed, false);
         brain.AddOutput(RotationChange, false);
@@ -160,6 +165,8 @@ public class Creature {
         Replicate = new NeuralProperty<>(NeuralPropertyType.Replicate);
 
         Feelers = new ArrayList<>();
+
+        SpecificAgingFactor = 1 + (new Random().nextDouble() * Settings.CreatureSettings.AgingVariance);
     }
 
     private void RandomizeGenetics(){
@@ -169,13 +176,13 @@ public class Creature {
 
     private void MutateGenetics(){
         Random r = new Random();
-        Genetics.x += r.nextDouble() * Settings.CreatureSettings.MutationRates.Genetics;
+        Genetics.x += (r.nextDouble() * 2 * Settings.CreatureSettings.MutationRates.Genetics) - Settings.CreatureSettings.MutationRates.Genetics;
         if (Genetics.x > 1) Genetics.x = 1; else if (Genetics.x < 0) Genetics.x = 0;
 
-        Genetics.y += r.nextDouble() * Settings.CreatureSettings.MutationRates.Genetics;
+        Genetics.y += (r.nextDouble() * 2 * Settings.CreatureSettings.MutationRates.Genetics) - Settings.CreatureSettings.MutationRates.Genetics;
         if (Genetics.y > 1) Genetics.y = 1; else if (Genetics.y < 0) Genetics.y = 0;
 
-        Genetics.z += r.nextDouble() * Settings.CreatureSettings.MutationRates.Genetics;
+        Genetics.z += (r.nextDouble() * 2 * Settings.CreatureSettings.MutationRates.Genetics) - Settings.CreatureSettings.MutationRates.Genetics;
         if (Genetics.z > 1) Genetics.z = 1; else if (Genetics.z < 0) Genetics.z = 0;
     }
 
@@ -310,7 +317,7 @@ public class Creature {
 
         // Constant Energy Cost
         Energy.setValue(Energy.getValue() - (Settings.CreatureSettings.EnergyDrainPerSecond * deltaTime / 1000));
-        Energy.setValue(Energy.getValue() - (Settings.CreatureSettings.AgeEnergyDrainPerSecond * Age.getValue() * deltaTime / 1000));
+        Energy.setValue(Energy.getValue() - (Settings.CreatureSettings.AgeEnergyDrainPerSecond * SpecificAgingFactor * Age.getValue() * deltaTime / 1000));
         if (CurrentTileWater.getValue() > 0)
             Energy.setValue(Energy.getValue() - (Settings.CreatureSettings.EnergyDrainOnWaterPerSecond * deltaTime / 1000));
 
@@ -343,12 +350,22 @@ public class Creature {
         }
 
         // Feeler
-        Energy.setValue(Energy.getValue() - (Settings.CreatureSettings.EnergyDrainPerFeelerPerSecond * Math.abs(Feelers.size()) * deltaTime / 1000));
+        Energy.setValue(Energy.getValue() - (Settings.CreatureSettings.EnergyDrainPerFeelerPerSecond * Feelers.size() * deltaTime / 1000));
 
         for (Feeler f : Feelers){
-            // Feeler.Angle - as it is
-            // Feeler.Length - as it is
-            Energy.setValue(Energy.getValue() - (Settings.CreatureSettings.EnergyDrainPerFeelerLengthPerSecond * Math.pow(f.Length.getValue(), Settings.CreatureSettings.EnergyDrainPerFeelerLengthExponent) * deltaTime / 1000));
+            // Feeler.Angle
+            f.Angle.setValue(f.Angle.getValue() * 2 * Math.PI + Rotation);
+
+            // Feeler.Length
+            f.Length.setValue(f.Length.getValue() * Settings.CreatureSettings.MaxFeelerLength);
+            if (f.Length.getValue() < Settings.CreatureSettings.MinFeelerLength)
+                f.Length.setValue(Settings.CreatureSettings.MinFeelerLength);
+
+            Energy.setValue(
+                    Energy.getValue() -
+                            (Settings.CreatureSettings.EnergyDrainPerFeelerLengthPerSecond *
+                             Math.pow(f.Length.getValue() - Settings.CreatureSettings.MinFeelerLength,
+                                     Settings.CreatureSettings.EnergyDrainPerFeelerLengthExponent) * deltaTime / 1000));
         }
 
         if (Energy.getValue() <= 0)

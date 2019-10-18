@@ -124,6 +124,8 @@ public class TileMap {
             double te = Tiles[readFromTileMapIndex][ec.X][ec.Y].Energy;
 
             te += ec.Energy;
+            if (te > Settings.SimulationSettings.MaxEnergyPerTile)
+                te = Settings.SimulationSettings.MaxEnergyPerTile;
 
             if (te < 0) {
                 //TODO: Fix

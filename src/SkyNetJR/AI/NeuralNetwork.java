@@ -55,9 +55,16 @@ public class NeuralNetwork {
         return i;
     }
 
+    private static double ActivationFunction(double x){
+        //return Sigmoid(x);
+        return TangentHyperbolic(x);
+    }
+    
     private static double Sigmoid(double x) {
         return (1/( 1 + Math.pow(Math.E,(-1*x))));
     }
+
+    private static double TangentHyperbolic(double x){ return Math.tanh(x); }
 
     public void EvaluateCpu(boolean multiThreaded){
         if (Destroyed) return;
@@ -80,7 +87,7 @@ public class NeuralNetwork {
             }
 
             for (int j = 0; j < v.length; j++) {
-                v[j][0] = Sigmoid(v[j][1]);
+                v[j][0] = ActivationFunction(v[j][1]);  // Activation Function
             }
         }
 
@@ -185,13 +192,13 @@ public class NeuralNetwork {
                             if (k < Weights.get(i)[j].length)
                                 newWeights.get(i)[j][k] = Weights.get(i)[j][k];
                             else
-                                newWeights.get(i)[j][k] = r.nextDouble() * Settings.CreatureSettings.MutationRates.InitialWeightRange;
+                                newWeights.get(i)[j][k] = (r.nextDouble() * 2 * Settings.CreatureSettings.MutationRates.InitialWeightRange) - Settings.CreatureSettings.MutationRates.InitialWeightRange;
                     else
                         for (int k = 0; k < newWeights.get(i)[j].length; k++)
-                            newWeights.get(i)[j][k] = r.nextDouble() * Settings.CreatureSettings.MutationRates.InitialWeightRange;
+                            newWeights.get(i)[j][k] = (r.nextDouble() * 2 * Settings.CreatureSettings.MutationRates.InitialWeightRange) - Settings.CreatureSettings.MutationRates.InitialWeightRange;
             else
                 for (int j = 0; j < newWeights.get(i).length; j++)
-                    for (int k = 0; k < newWeights.get(i)[j].length; k++) newWeights.get(i)[j][k] = r.nextDouble() * Settings.CreatureSettings.MutationRates.InitialWeightRange;
+                    for (int k = 0; k < newWeights.get(i)[j].length; k++) newWeights.get(i)[j][k] = (r.nextDouble() * 2 * Settings.CreatureSettings.MutationRates.InitialWeightRange) - Settings.CreatureSettings.MutationRates.InitialWeightRange;
 
         synchronized (WeightsLock){
             Weights.clear();

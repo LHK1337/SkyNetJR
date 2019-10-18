@@ -45,30 +45,34 @@ public class Settings {
 
     // Creature Settings
     public static class CreatureSettings {
+        public static final boolean CanFeelOnBody = false;
         public static final double BaseEnergy = 800d;
+        public static final double AgingVariance = 7;
         public static final double ReplicationMinAge = 10d;
-        public static final double EnergyDrainPerSecond = 2d;
+        public static final double EnergyDrainPerSecond = 5d;
         public static final double EnergyDrainOnWaterPerSecond = 200d;
         public static final double EnergyDrainPerReplication = 1000d;
-        public static final double AgeEnergyDrainPerSecond = 0.01d;
-        public static final double MovingEnergyDrainPerPixel = 1d;
-        public static final double EnergyDrainPerFeelerPerSecond = 0.05d;
-        public static final double EnergyDrainPerFeelerLengthPerSecond = 0.1d;
+        public static final double AgeEnergyDrainPerSecond = 0.05d;
+        public static final double MovingEnergyDrainPerPixel = 3d;
+        public static final double EnergyDrainPerFeelerPerSecond = 0.005d;
+        public static final double EnergyDrainPerFeelerLengthPerSecond = 0.01d;
         public static final double EnergyDrainPerFeelerLengthExponent = 1d;
-        public static final double RotationRange = 0.5 * Math.PI;
+        public static final double RotationRange = 0.25 * Math.PI;
         public static final double MovingRange = 5;
-        public static final double MaxEatPortion = 30;
+        public static final double MaxEatPortion = 40;
         public static final int CreatureSize = 8;
         public static final int MinPopulationSize = 50;
         public static final int InitialPopulationSize = 150;
-        public static final double InitialFeelerLength = 5;
+        public static final double InitialFeelerLength = 10;
+        public static final double MinFeelerLength = 5;
+        public static final double MaxFeelerLength = 12;
 
         public static class MutationRates{
-            public static final double InitialWeightRange = 0.001d;
-            public static final double Genetics = 0.05d;
-            public static final double Weights = 0.1d;
+            public static final double InitialWeightRange = 0.01d;
+            public static final double Genetics = 0.005d;
+            public static final double Weights = 0.04d;
             public static final double FeelerMutationChance = 0.03d;
-            public static final double FeelerAddRemoveThreshold = 0.5d;
+            public static final double FeelerAddRemoveThreshold = 0.6d;
             public static final double BrainMutationChance = 0.02d;
             public static final double HiddenLayerAddRemoveThreshold = 0.5d;
             public static final int MaxHiddenNeuronsPerLayer = 5;
