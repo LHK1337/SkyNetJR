@@ -66,7 +66,7 @@ public class NeuralNetwork {
 
     private static double TangentHyperbolic(double x){ return Math.tanh(x); }
 
-    public void EvaluateCpu(boolean multiThreaded){
+    public void EvaluateCpu(){
         if (Destroyed) return;
 
         double[][] v = new double[getHighestNeuronCount()][2];

@@ -128,9 +128,7 @@ public class TileMap {
                 te = Settings.SimulationSettings.MaxEnergyPerTile;
 
             if (te < 0) {
-                //TODO: Fix
-                //! WARNING MUTED
-                //System.out.println("[WARNING] Enqueued EnergyChange drains more Energy than possible.");
+                System.out.println("[WARNING] Enqueued EnergyChange drains more Energy than possible. | (" + ec.X + "; " + ec.Y + ") " + getReadyTiles()[ec.X][ec.Y].getType());
                 Tiles[readFromTileMapIndex][ec.X][ec.Y].Energy = 0d;
             }else Tiles[readFromTileMapIndex][ec.X][ec.Y].Energy = te;
         }

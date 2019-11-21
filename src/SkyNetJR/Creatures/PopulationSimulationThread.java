@@ -60,6 +60,7 @@ public class PopulationSimulationThread extends DestroyableThread {
                 if (destroy) break;
 
                 population.ClearCollisionGrid();
+                population.ClearUnstagedEnergies();
 
                 synchronized (population.getCreatures()){
                     for (int i = 0; i < population.getCreatures().size(); i++) {
@@ -94,11 +95,13 @@ public class PopulationSimulationThread extends DestroyableThread {
         for (Creature c : population.getCreatures()) {
             NeuralNetwork brain = c.getBrain();
 
-            brain.EvaluateCpu(false);
+            brain.EvaluateCpu();
         }
     }
 
-    public void ThinkOnCpuMultiThread() {}
+    public void ThinkOnCpuMultiThread() {
+        // TODO
+    }
 
     public void ThinkOnGpu() {
 

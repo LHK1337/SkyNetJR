@@ -2,6 +2,7 @@ package SkyNetJR.Creatures;
 
 import SkyNetJR.Settings;
 import SkyNetJR.VirtualWorld.Tile;
+import SkyNetJR.VirtualWorld.TileType;
 import SkyNetJR.VirtualWorld.VirtualWorld;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
@@ -124,18 +125,23 @@ public class Population {
     public double Eat(int positionX, int positionY, double value) {
         Tile t = getTile(positionX, positionY);
 
-        if (t == null || t == Tile.Void) return 0d;
+        if (t == null || t.getType() == TileType.Water || t == Tile.Void) return 0d;
 
-        double maxE = t.Energy;
+        double maxE = 0;
 
-        if (UnstagedTileEnergies.get(t) != null)
+        if (UnstagedTileEnergies.containsKey(t)) {
             maxE = UnstagedTileEnergies.get(t);
+        } else maxE = t.Energy;
 
         if (value > maxE){
             value = maxE;
         }
 
-        if (value != 0) World.getTileMap().EnqueueEnergyChange(positionX / World.getTileMap().getTileSize(), positionY / World.getTileMap().getTileSize(), -value);
+        if (value != 0) {
+            World.getTileMap().EnqueueEnergyChange(positionX / World.getTileMap().getTileSize(), positionY / World.getTileMap().getTileSize(), -value);
+
+            UnstagedTileEnergies.put(t, maxE - value);
+        }
         return value;
     }
 
@@ -178,5 +184,9 @@ public class Population {
 
     public void setLastSimulationTime(long time){
         LastSimulationTime = time;
+    }
+
+    public void ClearUnstagedEnergies() {
+        UnstagedTileEnergies.clear();
     }
 }

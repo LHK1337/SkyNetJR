@@ -1,5 +1,4 @@
 package SkyNetJR;
-
 import org.joml.Vector3d;
 
 import java.util.Random;
