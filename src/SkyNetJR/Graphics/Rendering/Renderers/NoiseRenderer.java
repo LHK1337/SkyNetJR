@@ -1,6 +1,6 @@
-package SkyNetJR.Rendering.Renderers;
+package SkyNetJR.Graphics.Rendering.Renderers;
 
-import SkyNetJR.Rendering.Renderer;
+import SkyNetJR.Graphics.Rendering.Renderer;
 import SkyNetJR.Utils.ValueNoise2D;
 import org.lwjgl.opengl.GL11;
 

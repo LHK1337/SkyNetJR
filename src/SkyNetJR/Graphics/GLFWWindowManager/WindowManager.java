@@ -1,4 +1,4 @@
-package SkyNetJR.GLFWWindowManager;
+package SkyNetJR.Graphics.GLFWWindowManager;
 
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.glfw.GLFWKeyCallback;

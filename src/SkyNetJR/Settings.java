@@ -15,7 +15,7 @@ public class Settings {
 
     // World Settings
     public static class WorldSettings {
-        public static final int Width = 256;
+        public static final int Width = 320;
         public static final int Height = 180;
         public static final int TileSize = 4;
         public static final Vector3d MaxEnergyColor = new Vector3d(0.25d, 0.8d, 0d);

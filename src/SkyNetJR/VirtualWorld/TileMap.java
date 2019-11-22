@@ -4,6 +4,7 @@ import SkyNetJR.Settings;
 import SkyNetJR.Utils.ValueNoise2D;
 import org.lwjglx.debug.org.eclipse.jetty.util.BlockingArrayQueue;
 
+import java.util.Map;
 import java.util.Queue;
 import java.util.Random;
 
@@ -80,6 +81,19 @@ public class TileMap {
         readyTilesNextSwapLock = new Object();
     }
 
+    public double RequestConsumeEnergy(Tile t, double energy){
+        if (Math.min(Tiles[1 - readyTilesIndex][t.X][t.Y].Energy, Tiles[readyTilesIndex][t.X][t.Y].Energy) >= energy){
+            Tiles[1 - readyTilesIndex][t.X][t.Y].Energy -= energy;
+            Tiles[readyTilesIndex][t.X][t.Y].Energy -= energy;
+        }else {
+            energy = Math.min(Tiles[1 - readyTilesIndex][t.X][t.Y].Energy, Tiles[readyTilesIndex][t.X][t.Y].Energy);
+            Tiles[1 - readyTilesIndex][t.X][t.Y].Energy = 0d;
+            Tiles[readyTilesIndex][t.X][t.Y].Energy = 0d;
+        }
+
+        return energy;
+    }
+
     public void SetDefaults() {
         width = Settings.WorldSettings.Width;
         height = Settings.WorldSettings.Height;
@@ -100,8 +114,8 @@ public class TileMap {
 
             for (int x = 0; x < width; x++) {
                 for (int y = 0; y < height; y++) {
-                    Tiles[0][x][y] = new Tile(Settings.SimulationSettings.StartEnergy, heightMap[x][y] <= generationInfo.LandThreshold ? TileType.Land : TileType.Water);
-                    Tiles[1][x][y] = new Tile(Settings.SimulationSettings.StartEnergy, heightMap[x][y] <= generationInfo.LandThreshold ? TileType.Land : TileType.Water);
+                    Tiles[0][x][y] = new Tile(Settings.SimulationSettings.StartEnergy, heightMap[x][y] <= generationInfo.LandThreshold ? TileType.Land : TileType.Water, x, y);
+                    Tiles[1][x][y] = new Tile(Settings.SimulationSettings.StartEnergy, heightMap[x][y] <= generationInfo.LandThreshold ? TileType.Land : TileType.Water, x, y);
                 }
             }
         }
@@ -118,20 +132,21 @@ public class TileMap {
             writeToTileMapIndex = readFromTileMapIndex = latestTileMapIndex;
         }
 
-        while (!EnergyChanges.isEmpty()) {
-            EnergyChange ec = EnergyChanges.poll();
-
-            double te = Tiles[readFromTileMapIndex][ec.X][ec.Y].Energy;
-
-            te += ec.Energy;
-            if (te > Settings.SimulationSettings.MaxEnergyPerTile)
-                te = Settings.SimulationSettings.MaxEnergyPerTile;
-
-            if (te < 0) {
-                System.out.println("[WARNING] Enqueued EnergyChange drains more Energy than possible. | (" + ec.X + "; " + ec.Y + ") " + getReadyTiles()[ec.X][ec.Y].getType());
-                Tiles[readFromTileMapIndex][ec.X][ec.Y].Energy = 0d;
-            }else Tiles[readFromTileMapIndex][ec.X][ec.Y].Energy = te;
-        }
+        //TODO remove
+//        while (!EnergyChanges.isEmpty()) {
+//            EnergyChange ec = EnergyChanges.poll();
+//
+//            double te = Tiles[readFromTileMapIndex][ec.X][ec.Y].Energy;
+//
+//            te += ec.Energy;
+//            if (te > Settings.SimulationSettings.MaxEnergyPerTile)
+//                te = Settings.SimulationSettings.MaxEnergyPerTile;
+//
+//            if (te < 0) {
+//                System.out.println("[WARNING] Enqueued EnergyChange drains more Energy than possible. (" + -te + ") | (" + ec.X + "; " + ec.Y + ") " + getReadyTiles()[ec.X][ec.Y].getType());
+//                Tiles[readFromTileMapIndex][ec.X][ec.Y].Energy = 0d;
+//            }else Tiles[readFromTileMapIndex][ec.X][ec.Y].Energy = te;
+//        }
 
         for (int x = 0; x < width; x++) {
             for (int y = 0; y < height; y++) {
@@ -193,8 +208,12 @@ public class TileMap {
         return Tiles[readyTilesIndex];
     }
 
-    public void EnqueueEnergyChange(int x, int y, double energy){
-        EnergyChanges.add(new EnergyChange(x, y, energy));
+    private Tile[][] getNotReadyTiles() {
+        return Tiles[1 - readyTilesIndex];
+    }
+
+    public void EnqueueEnergyChange(int x, int y, double energy, Map<Tile, Double> map, Tile t){
+        EnergyChanges.add(new EnergyChange(x, y, energy, map, t));
     }
 
     public int getWidth() {

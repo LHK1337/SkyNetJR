@@ -1,13 +1,14 @@
-package SkyNetJR.Rendering;
+package SkyNetJR.Graphics.Rendering;
 
-import SkyNetJR.GLFWWindowManager.WindowManager;
+import SkyNetJR.Graphics.GLFWWindowManager.WindowManager;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class View {
-    private final int WIDTH;
-    private final int HEIGHT;
+    private int width;
+    private int height;
+    private final boolean resizeable;
     private final String title;
 
     private boolean Destroyed;
@@ -15,12 +16,13 @@ public class View {
     private boolean useVSync;
     private RenderThread renderThread;
 
-    public View(int width, int height, String title, WindowManager wm) {
-        WIDTH = width;
-        HEIGHT = height;
+    public View(int width, int height, String title, boolean resizeable, WindowManager wm) {
+        this.width = width;
+        this.height = height;
         renderers = new ArrayList<>();
         useVSync = true;
         this.title = title;
+        this.resizeable = resizeable;
 
         renderThread = new RenderThread(this, wm);
     }
@@ -56,15 +58,25 @@ public class View {
         this.useVSync = useVSync;
     }
 
-    public int getWIDTH() {
-        return WIDTH;
+    public int getWidth() {
+        return width;
     }
 
-    public int getHEIGHT() {
-        return HEIGHT;
+    public int getHeight() {
+        return height;
+    }
+
+    public void setWidth(int w) {
+        width = w;
+    }
+
+    public void setHeight(int h) {
+        height = h;
     }
 
     public String getTitle() {
         return title;
     }
+
+    public boolean getResizable() { return resizeable; }
 }

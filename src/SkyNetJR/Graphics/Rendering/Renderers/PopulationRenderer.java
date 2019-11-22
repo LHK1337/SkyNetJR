@@ -1,9 +1,9 @@
-package SkyNetJR.Rendering.Renderers;
+package SkyNetJR.Graphics.Rendering.Renderers;
 
 import SkyNetJR.Creatures.Creature;
 import SkyNetJR.Creatures.Feeler;
 import SkyNetJR.Creatures.Population;
-import SkyNetJR.Rendering.Renderer;
+import SkyNetJR.Graphics.Rendering.Renderer;
 import SkyNetJR.Settings;
 import org.lwjgl.opengl.GL11;
 

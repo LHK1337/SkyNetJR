@@ -1,4 +1,4 @@
-package SkyNetJR.Rendering;
+package SkyNetJR.Graphics.Rendering;
 
 public abstract class Renderer {
     protected int positionX;

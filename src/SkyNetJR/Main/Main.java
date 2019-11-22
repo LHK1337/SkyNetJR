@@ -1,10 +1,9 @@
 package SkyNetJR.Main;
 
 import SkyNetJR.Creatures.Population;
-import SkyNetJR.GLFWWindowManager.WindowManager;
-import SkyNetJR.Rendering.Renderers.PopulationRenderer;
-import SkyNetJR.Rendering.Renderers.VirtualWorldRenderer;
-import SkyNetJR.Rendering.View;
+import SkyNetJR.Graphics.GLFWWindowManager.WindowManager;
+import SkyNetJR.Graphics.Rendering.Renderers.VirtualWorldRenderer;
+import SkyNetJR.Graphics.Rendering.View;
 import SkyNetJR.Settings;
 import SkyNetJR.VirtualWorld.TileMap;
 import SkyNetJR.VirtualWorld.VirtualWorld;
@@ -19,7 +18,7 @@ public class Main {
         wm.Init();
 
         // create World view
-        View worldView = new View(Settings.ViewSettings.Width, Settings.ViewSettings.Height, "SkyNetJR", wm);
+        View worldView = new View(Settings.ViewSettings.Width, Settings.ViewSettings.Height, "SkyNetJR", true, wm);
 
         TileMap map = new TileMap();
         map.SetDefaults();
@@ -33,7 +32,20 @@ public class Main {
         population.FillPopulation();
         population.setRunning(true);
 
-        worldView.getRenderers().add(new PopulationRenderer(population));
+
+        //! GOING FOR THE REWRITE XDDDDDDDDD
+        //
+        //
+        //
+        //
+        //
+        //
+        //
+        //
+        //? :,,,,,,,,,,,,,,,,(
+
+
+        //worldView.getRenderers().add(new PopulationRenderer(population));
 
 
 

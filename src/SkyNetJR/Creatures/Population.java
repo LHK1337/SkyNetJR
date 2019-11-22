@@ -7,6 +7,7 @@ import SkyNetJR.VirtualWorld.VirtualWorld;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 //Todo: SimulationThread Loop
 //* SimulationThread Loop
@@ -65,7 +66,7 @@ public class Population {
     private PopulationSimulationThread populationSimulationThread;
 
     private Population(){
-        UnstagedTileEnergies = new HashMap<>();
+        UnstagedTileEnergies = new ConcurrentHashMap<>();
         Creatures = new ArrayList<>();
         realTime = true;
 
@@ -127,22 +128,25 @@ public class Population {
 
         if (t == null || t.getType() == TileType.Water || t == Tile.Void) return 0d;
 
-        double maxE = 0;
+        return World.getTileMap().RequestConsumeEnergy(t, value);
 
-        if (UnstagedTileEnergies.containsKey(t)) {
-            maxE = UnstagedTileEnergies.get(t);
-        } else maxE = t.Energy;
-
-        if (value > maxE){
-            value = maxE;
-        }
-
-        if (value != 0) {
-            World.getTileMap().EnqueueEnergyChange(positionX / World.getTileMap().getTileSize(), positionY / World.getTileMap().getTileSize(), -value);
-
-            UnstagedTileEnergies.put(t, maxE - value);
-        }
-        return value;
+        //TODO remove
+//        double maxE = 0;
+//
+//        if (UnstagedTileEnergies.containsKey(t)) {
+//            maxE = UnstagedTileEnergies.get(t);
+//        } else maxE = t.Energy;
+//
+//        if (value > maxE){
+//            value = maxE;
+//        }
+//
+//        if (value != 0) {
+//            World.getTileMap().EnqueueEnergyChange(positionX / World.getTileMap().getTileSize(), positionY / World.getTileMap().getTileSize(), -value, UnstagedTileEnergies, t);
+//
+//            UnstagedTileEnergies.put(t, maxE - value);
+//        }
+//        return value;
     }
 
     public void FillPopulation() {

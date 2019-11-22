@@ -1,6 +1,6 @@
-package SkyNetJR.Rendering.Renderers;
+package SkyNetJR.Graphics.Rendering.Renderers;
 
-import SkyNetJR.Rendering.Renderer;
+import SkyNetJR.Graphics.Rendering.Renderer;
 import SkyNetJR.Settings;
 import SkyNetJR.VirtualWorld.Tile;
 import SkyNetJR.VirtualWorld.TileMap;
@@ -35,7 +35,7 @@ public class VirtualWorldRenderer extends Renderer {
         map.AcquireUse();
         Tile[][] t = map.getReadyTiles();
 
-        for (int x = 0; x < t.length; x++)
+        for (int x = 0; x < t.length; x++) {
             for (int y = 0; y < t[x].length; y++) {
 
                 if (t[x][y].getType() != TileType.Water) {
@@ -80,6 +80,7 @@ public class VirtualWorldRenderer extends Renderer {
                     GL11.glEnd();
                 }
             }
+        }
 
         map.ReleaseUse();
     }

@@ -10,7 +10,7 @@ import java.nio.IntBuffer;
 
 import static org.lwjgl.glfw.Callbacks.glfwFreeCallbacks;
 import static org.lwjgl.glfw.GLFW.*;
-import static org.lwjgl.opengl.GL11.glClearColor;
+import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.system.MemoryStack.stackPush;
 import static org.lwjgl.system.MemoryUtil.NULL;
 
@@ -106,6 +106,12 @@ public class Main {
         // the window or has pressed the ESCAPE key.
         while (!glfwWindowShouldClose(window)) {
             //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear the framebuffer
+
+            glBegin(GL_TRIANGLES);
+            glVertex2i(-1,-1);
+            glVertex2i(0,1);
+            glVertex2i(1,0);
+            glEnd();
 
             glfwSwapBuffers(window); // swap the color buffers
 
