@@ -82,6 +82,8 @@ public class SimulationThread extends DestroyableThread {
             }
             _world.setLastSimulationTime(realTimeTimer.getCurrentTime());
 
+            if (ShouldExit()) break;
+
             // update creatures
             _population.Update(_timePrecision, _multiThread, _threadPool);
             _population.setLastSimulationTime(realTimeTimer.getCurrentTime());
@@ -107,6 +109,8 @@ public class SimulationThread extends DestroyableThread {
 
     @Override
     public void Destroy() {
+        super.Destroy();
+
         if (_multiThread) {
             ExecutorService tp = _threadPool;
             _threadPool = null;
@@ -119,7 +123,5 @@ public class SimulationThread extends DestroyableThread {
                 e.printStackTrace();
             }
         }
-
-        super.Destroy();
     }
 }
