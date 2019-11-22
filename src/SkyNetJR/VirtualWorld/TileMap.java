@@ -2,29 +2,21 @@ package SkyNetJR.VirtualWorld;
 
 import SkyNetJR.Settings;
 import SkyNetJR.Utils.ValueNoise2D;
-import org.lwjglx.debug.org.eclipse.jetty.util.BlockingArrayQueue;
 
-import java.util.Map;
-import java.util.Queue;
 import java.util.Random;
 
 public class TileMap {
-    private final Object readyTilesNextSwapLock;
-    private int width;
-    private int height;
-    private int tileSize;
-    private GenerationInfo generationInfo;
-    private double MaxEnergyPerTile;
-    private double BaseEnergyGeneration;
-    private Tile[][][] Tiles;
-    private int readyTilesIndex;
-    private int readyTilesUseCount;
-    private int latestTileMapIndex = 0;
-    private Queue<EnergyChange> EnergyChanges = new BlockingArrayQueue<>();
+    private int _width;
+    private int _height;
+    private int _tileSize;
+    private GenerationInfo _generationInfo;
+    private double _maxEnergyPerTile;
+    private double _baseEnergyGeneration;
+    private Tile[][] _tiles;
 
     private Random random;
 
-    public static TileType[] getNeighbourTypes(Tile[][] t, int x, int y){
+    public static TileType[] GetNeighbourTypes(Tile[][] t, int x, int y){
         TileType[] neighbours = new TileType[4];
 
         if (x > 0)
@@ -50,7 +42,7 @@ public class TileMap {
         return neighbours;
     }
 
-    public static Double[] getNeighbourEnergy(Tile[][] t, int x, int y){
+    public static Double[] GetNeighbourEnergy(Tile[][] t, int x, int y){
         Double[] neighbours = new Double[4];
 
         if (x > 0)
@@ -78,177 +70,113 @@ public class TileMap {
 
     public TileMap() {
         random = new Random();
-        readyTilesNextSwapLock = new Object();
     }
 
     public double RequestConsumeEnergy(Tile t, double energy){
-        if (Math.min(Tiles[1 - readyTilesIndex][t.X][t.Y].Energy, Tiles[readyTilesIndex][t.X][t.Y].Energy) >= energy){
-            Tiles[1 - readyTilesIndex][t.X][t.Y].Energy -= energy;
-            Tiles[readyTilesIndex][t.X][t.Y].Energy -= energy;
+        if (_tiles[t.X][t.Y].Energy >= energy){
+            _tiles[t.X][t.Y].Energy -= energy;
         }else {
-            energy = Math.min(Tiles[1 - readyTilesIndex][t.X][t.Y].Energy, Tiles[readyTilesIndex][t.X][t.Y].Energy);
-            Tiles[1 - readyTilesIndex][t.X][t.Y].Energy = 0d;
-            Tiles[readyTilesIndex][t.X][t.Y].Energy = 0d;
+            energy = _tiles[t.X][t.Y].Energy;
+            _tiles[t.X][t.Y].Energy = 0d;
         }
 
         return energy;
     }
 
     public void SetDefaults() {
-        width = Settings.WorldSettings.Width;
-        height = Settings.WorldSettings.Height;
-        tileSize = Settings.WorldSettings.TileSize;
-        generationInfo = GenerationInfo.GetDefaults();
-        MaxEnergyPerTile = Settings.SimulationSettings.MaxEnergyPerTile;
-        BaseEnergyGeneration = Settings.SimulationSettings.BaseEnergyGeneration;
+        _width = Settings.WorldSettings.Width;
+        _height = Settings.WorldSettings.Height;
+        _tileSize = Settings.WorldSettings.TileSize;
+        _generationInfo = GenerationInfo.GetDefaults();
+        _maxEnergyPerTile = Settings.SimulationSettings.MaxEnergyPerTile;
+        _baseEnergyGeneration = Settings.SimulationSettings.BaseEnergyGeneration;
     }
 
     public void Generate() {
-        ValueNoise2D vn = new ValueNoise2D(width, height, generationInfo);
+        ValueNoise2D vn = new ValueNoise2D(_width, _height, _generationInfo);
         vn.Calculate();
         double[][] heightMap = vn.getHeightMap();
 
-        if (height > 0 && width > 0 && tileSize > 0 && generationInfo != null) {
-            Tiles = new Tile[2][width][height];
-            readyTilesIndex = 0;
+        if (_height > 0 && _width > 0 && _tileSize > 0 && _generationInfo != null) {
+            _tiles = new Tile[_width][_height];
 
-            for (int x = 0; x < width; x++) {
-                for (int y = 0; y < height; y++) {
-                    Tiles[0][x][y] = new Tile(Settings.SimulationSettings.StartEnergy, heightMap[x][y] <= generationInfo.LandThreshold ? TileType.Land : TileType.Water, x, y);
-                    Tiles[1][x][y] = new Tile(Settings.SimulationSettings.StartEnergy, heightMap[x][y] <= generationInfo.LandThreshold ? TileType.Land : TileType.Water, x, y);
+            for (int x = 0; x < _width; x++) {
+                for (int y = 0; y < _height; y++) {
+                    _tiles[x][y] = new Tile(Settings.SimulationSettings.StartEnergy, heightMap[x][y] <= _generationInfo.LandThreshold ? TileType.Land : TileType.Water, x, y);
                 }
             }
         }
     }
 
-    public void Update(int deltaTime) {
-        int readFromTileMapIndex;
-        int writeToTileMapIndex;
-
-        if (readyTilesIndex == latestTileMapIndex) {
-            readFromTileMapIndex = readyTilesIndex;
-            writeToTileMapIndex = 1 - readyTilesIndex;
-        } else {
-            writeToTileMapIndex = readFromTileMapIndex = latestTileMapIndex;
-        }
-
-        //TODO remove
-//        while (!EnergyChanges.isEmpty()) {
-//            EnergyChange ec = EnergyChanges.poll();
-//
-//            double te = Tiles[readFromTileMapIndex][ec.X][ec.Y].Energy;
-//
-//            te += ec.Energy;
-//            if (te > Settings.SimulationSettings.MaxEnergyPerTile)
-//                te = Settings.SimulationSettings.MaxEnergyPerTile;
-//
-//            if (te < 0) {
-//                System.out.println("[WARNING] Enqueued EnergyChange drains more Energy than possible. (" + -te + ") | (" + ec.X + "; " + ec.Y + ") " + getReadyTiles()[ec.X][ec.Y].getType());
-//                Tiles[readFromTileMapIndex][ec.X][ec.Y].Energy = 0d;
-//            }else Tiles[readFromTileMapIndex][ec.X][ec.Y].Energy = te;
-//        }
-
-        for (int x = 0; x < width; x++) {
-            for (int y = 0; y < height; y++) {
-                if (Tiles[readFromTileMapIndex][x][y].getType() != TileType.Water && Tiles[readFromTileMapIndex][x][y].Energy != MaxEnergyPerTile) {
+    public void Update(long deltaTime) {Update(deltaTime, 0, 1);}
+    public void Update(long deltaTime, int begin, int slice) {
+        for (int x = begin; x < _width; x += slice) {
+            for (int y = 0; y < _height; y++) {
+                if (_tiles[x][y].getType() != TileType.Water && _tiles[x][y].Energy != _maxEnergyPerTile) {
                     double influence = Settings.SimulationSettings.BaseInfluence;
 
-                    TileType[] nT = getNeighbourTypes(Tiles[readFromTileMapIndex], x, y);
-                    Double[] nE = getNeighbourEnergy(Tiles[readFromTileMapIndex], x, y);
+                    TileType[] nT = GetNeighbourTypes(_tiles, x, y);
+                    Double[] nE = GetNeighbourEnergy(_tiles, x, y);
 
                     for (int i = 0; i < nT.length; i++) {
                         if (nT[i] == TileType.Water) influence += Settings.SimulationSettings.WaterInfluence;
-                        else if (nT[i] == TileType.Land && nE[i] >= MaxEnergyPerTile * Settings.SimulationSettings.TileInfluenceThreshold) {
-                            influence += nE[i] / MaxEnergyPerTile * Settings.SimulationSettings.OutGrownTileInfluence;
+                        else if (nT[i] == TileType.Land && nE[i] >= _maxEnergyPerTile * Settings.SimulationSettings.TileInfluenceThreshold) {
+                            influence += nE[i] / _maxEnergyPerTile * Settings.SimulationSettings.OutGrownTileInfluence;
                         }
                     }
 
-                    Tiles[writeToTileMapIndex][x][y].Energy = Tiles[readFromTileMapIndex][x][y].Energy + BaseEnergyGeneration * influence * ((double) deltaTime / 1000d);
+                    _tiles[x][y].Energy += _baseEnergyGeneration * influence * ((double) deltaTime / 1000d);
 
                     if (random.nextDouble() <= Settings.SimulationSettings.RandomEnergyGenerationChance)
-                        Tiles[writeToTileMapIndex][x][y].Energy += Settings.SimulationSettings.RandomEnergyGeneration;
+                        _tiles[x][y].Energy += Settings.SimulationSettings.RandomEnergyGeneration;
 
-                    if (Tiles[writeToTileMapIndex][x][y].Energy > MaxEnergyPerTile)
-                        Tiles[writeToTileMapIndex][x][y].Energy = MaxEnergyPerTile;
+                    if (_tiles[x][y].Energy > _maxEnergyPerTile)
+                        _tiles[x][y].Energy = _maxEnergyPerTile;
 
-                    else if (Tiles[writeToTileMapIndex][x][y].Energy < 0)
-                        Tiles[writeToTileMapIndex][x][y].Energy = 0.0d;
+                    else if (_tiles[x][y].Energy < 0)
+                        _tiles[x][y].Energy = 0.0d;
                 }
             }
         }
-
-        latestTileMapIndex = writeToTileMapIndex;
-
-        if (readyTilesUseCount == 0)
-            SwapReadyTiles();
     }
 
-    public void AcquireUse() {
-        readyTilesUseCount++;
-    }
-
-    public void ReleaseUse() {
-        readyTilesUseCount--;
-    }
-
-    private void SwapReadyTiles() {
-        readyTilesIndex = 1 - readyTilesIndex;
-        synchronized (readyTilesNextSwapLock) {
-            readyTilesNextSwapLock.notifyAll();
-        }
-    }
-
-    public void WaitForNextSwap() throws InterruptedException {
-        synchronized (readyTilesNextSwapLock) {
-            readyTilesNextSwapLock.wait();
-        }
-    }
-
-    public Tile[][] getReadyTiles() {
-        return Tiles[readyTilesIndex];
-    }
-
-    private Tile[][] getNotReadyTiles() {
-        return Tiles[1 - readyTilesIndex];
-    }
-
-    public void EnqueueEnergyChange(int x, int y, double energy, Map<Tile, Double> map, Tile t){
-        EnergyChanges.add(new EnergyChange(x, y, energy, map, t));
+    public Tile[][] getTiles() {
+        return _tiles;
     }
 
     public int getWidth() {
-        return width;
+        return _width;
     }
 
     public int getHeight() {
-        return height;
+        return _height;
     }
 
     public int getTileSize() {
-        return tileSize;
+        return _tileSize;
     }
 
     public GenerationInfo getGenerationInfo() {
-        return generationInfo;
+        return _generationInfo;
     }
 
     public void setGenerationInfo(GenerationInfo generationInfo) {
-        this.generationInfo = generationInfo;
+        this._generationInfo = generationInfo;
     }
 
     public double getMaxEnergyPerTile() {
-        return MaxEnergyPerTile;
+        return _maxEnergyPerTile;
     }
 
     public void setMaxEnergyPerTile(double maxEnergyPerTile) {
-        MaxEnergyPerTile = maxEnergyPerTile;
+        _maxEnergyPerTile = maxEnergyPerTile;
     }
 
     public double getBaseEnergyGeneration() {
-        return BaseEnergyGeneration;
+        return _baseEnergyGeneration;
     }
 
     public void setBaseEnergyGeneration(double baseEnergyGeneration) {
-        BaseEnergyGeneration = baseEnergyGeneration;
+        _baseEnergyGeneration = baseEnergyGeneration;
     }
 }

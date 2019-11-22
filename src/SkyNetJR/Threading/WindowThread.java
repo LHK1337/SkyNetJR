@@ -1,30 +1,48 @@
-package SkyNetJR.Graphics.Rendering;
+package SkyNetJR.Threading;
 
 import SkyNetJR.Graphics.GLFWWindowManager.WindowManager;
-import SkyNetJR.Utils.DestroyableThread;
+import SkyNetJR.Graphics.Rendering.Renderer;
+import SkyNetJR.Graphics.Rendering.View;
 import SkyNetJR.Utils.Timer;
+import org.lwjgl.glfw.GLFWKeyCallbackI;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL11;
 
-import java.util.List;
+import java.awt.event.ActionEvent;
 
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
 
-public class RenderThread extends DestroyableThread {
+public class WindowThread extends DestroyableThread {
     private final View view;
     private boolean useVSync;
 
     private long windowHandle;
     private WindowManager windowManager;
 
+    private ActionEvent _keyEvent;
+
     private long _renderTime;
+
+    public long getWindowHandle() { return windowHandle; }
 
     public long getRenderTime(){
         return _renderTime;
     }
 
-    public RenderThread(View view, WindowManager wm) {
+    public void AttachKeyInputCallback(GLFWKeyCallbackI keyCallback) {
+        while (windowHandle == 0) {
+            try {
+                Thread.sleep(10);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+        glfwSetKeyCallback(windowHandle, keyCallback);
+    }
+
+    public WindowThread(View view, WindowManager wm) {
         this.view = view;
         this.windowManager = wm;
     }
@@ -63,6 +81,8 @@ public class RenderThread extends DestroyableThread {
         Timer renderTimer = new Timer();
 
         while (true) {
+            renderTimer.start();
+
             if (glfwWindowShouldClose(windowHandle)) {
                 destroy = true;
                 windowManager.DestroyWindow(windowHandle);
@@ -86,25 +106,35 @@ public class RenderThread extends DestroyableThread {
                 glfwSwapInterval(useVSync ? 1 : 0);
             }
 
-            List<Renderer> r = view.getRenderers();
-
-            renderTimer.start();
-
             //glClear(GL_COLOR_BUFFER_BIT);
 
-            for (int i = 0; i < r.size(); i++) {
-                r.get(i).Render(0, 0);
+            try {
+                for (Renderer renderer : view.getRenderers()) {
+                    renderer.Render(0, 0);
+                }
+            } catch (Exception e)
+            {
+                System.out.println("[EXCEPTION] while rendering");
+                e.printStackTrace();
             }
 
-            renderTimer.end();
-            _renderTime = renderTimer.getTotalTime();
 
             glfwSwapBuffers(windowHandle);
             glfwPollEvents();
+
+            renderTimer.end();
+            _renderTime = renderTimer.getTotalTime();
         }
     }
 
     private void resizeViewPortToWindow(){
         GL11.glViewport(0, 0, view.getWidth(), view.getHeight());
+    }
+
+    @Override
+    public void Destroy() {
+        windowManager.DestroyWindow(windowHandle);
+
+        super.Destroy();
     }
 }

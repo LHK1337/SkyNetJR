@@ -1,4 +1,4 @@
-package SkyNetJR.Utils;
+package SkyNetJR.Threading;
 
 public abstract class DestroyableThread extends Thread {
     protected final Object destroyedHandle;
@@ -9,9 +9,19 @@ public abstract class DestroyableThread extends Thread {
         destroy = false;
     }
 
+    protected boolean ShouldExit(){
+        if (destroy) {
+            synchronized (destroyedHandle) {
+                destroyedHandle.notifyAll();
+            }
+            return true;
+        }else return false;
+    }
+
     public void Destroy() {
         destroy = true;
 
+        // detect self destroy and prevent deadlock
         if (Thread.currentThread().getId() == this.getId())
             return;
 

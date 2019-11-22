@@ -1,6 +1,8 @@
 package SkyNetJR.Graphics.Rendering;
 
 import SkyNetJR.Graphics.GLFWWindowManager.WindowManager;
+import SkyNetJR.Main.KeyInputs;
+import SkyNetJR.Threading.WindowThread;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,7 +16,7 @@ public class View {
     private boolean Destroyed;
     private List<Renderer> renderers;
     private boolean useVSync;
-    private RenderThread renderThread;
+    private WindowThread _windowThread;
 
     public View(int width, int height, String title, boolean resizeable, WindowManager wm) {
         this.width = width;
@@ -24,7 +26,7 @@ public class View {
         this.title = title;
         this.resizeable = resizeable;
 
-        renderThread = new RenderThread(this, wm);
+        _windowThread = new WindowThread(this, wm);
     }
 
     public boolean getDestroyed() {
@@ -32,15 +34,18 @@ public class View {
     }
 
     public void Start() {
-        renderThread.start();
+        _windowThread.start();
+        _windowThread.AttachKeyInputCallback(KeyInputs::KeyHandler);
     }
 
     public List<Renderer> getRenderers() {
         return renderers;
     }
 
+    public boolean isWindow(long windowHandle) { return windowHandle == _windowThread.getWindowHandle(); }
+
     public void Destroy() {
-        renderThread.Destroy();
+        _windowThread.Destroy();
 
         for (Renderer renderer : renderers) {
             renderer.Destroy();

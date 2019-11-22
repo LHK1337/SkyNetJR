@@ -46,7 +46,7 @@ public class WindowManager {
     public void DestroyWindow(long window) {
         // Free the window callbacks and destroy the window
         glfwFreeCallbacks(window);
-        glfwDestroyWindow(window);
+        //glfwDestroyWindow(window);
 
         WindowHandlesLock.lock();
         for (int i = 0; i < WindowHandles.size(); i++)

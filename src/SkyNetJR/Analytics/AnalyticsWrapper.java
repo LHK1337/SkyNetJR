@@ -1,28 +1,26 @@
 package SkyNetJR.Analytics;
 
 import SkyNetJR.Creatures.Population;
-import SkyNetJR.Graphics.Rendering.RenderThread;
+import SkyNetJR.Threading.WindowThread;
 import SkyNetJR.VirtualWorld.VirtualWorld;
 
 public class AnalyticsWrapper {
     private VirtualWorld _virtualWorld;
     private Population _population;
-    private RenderThread _renderThread;
+    private WindowThread _windowThread;
 
-    public AnalyticsWrapper(VirtualWorld virtualWorld, Population population, RenderThread renderThread) {
+    public AnalyticsWrapper(VirtualWorld virtualWorld, Population population, WindowThread windowThread) {
         _virtualWorld = virtualWorld;
         _population = population;
-        _renderThread = renderThread;
+        _windowThread = windowThread;
     }
 
-    public double getFrameRenderingTime() { return _renderThread.getRenderTime(); }
+    public double getFrameRenderingTime() { return _windowThread.getRenderTime(); }
     public double getFramePerSecond() { return 1 / getFrameRenderingTime(); }
 
-    public double getWorldTimePrecision() { return _virtualWorld.getTimePrecision(); }
-    public double getWorldSimulationTime() { return _virtualWorld.getLastSimulatedFrameTime(); }
+    public double getWorldSimulationTime() { return _virtualWorld.getLastSimulationTime(); }
     public double getWorldSimulationsPerSecond() { return 1 / getWorldSimulationTime(); }
 
-    public double getPopulationTimePrecision() { return _population.getTimePrecision(); }
     public double getPopulationSimulationTime() { return _population.getLastSimulationTime(); }
     public double getPopulationSimulationsPerSecond() { return 1 / getWorldSimulationTime(); }
 }

@@ -4,193 +4,173 @@ import SkyNetJR.Settings;
 import SkyNetJR.VirtualWorld.Tile;
 import SkyNetJR.VirtualWorld.TileType;
 import SkyNetJR.VirtualWorld.VirtualWorld;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-
-//Todo: SimulationThread Loop
-//* SimulationThread Loop
-//? Acquire TileMap
-// Creature sensing
-// Creature thinking
-// Reset CollisionGrid
-// Creature acting
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 
 public class Population {
-    private VirtualWorld World;
+    private VirtualWorld _world;
 
-    private List[][] CollisionGrid;
+    private List[][] _collisionGrid;
 
-    private Map<Tile, Double> UnstagedTileEnergies;
+    private final Object _creatureLock = new Object();
+    private List<Creature> _creatures;
 
-    private final Object CreatureLock = new Object();
-    private List<Creature> Creatures;
+    private long _lastSimulationTime;
+    private boolean _isRunning;
+    private boolean _realTime;
 
-    private long LastSimulationTime;
 
-    private int timePrecision;
-    private boolean isRunning;
-    private boolean realTime;
-
-    public int getTimePrecision() {
-        return timePrecision;
-    }
-    public void setTimePrecision(int timePrecision) {
-        this.timePrecision = timePrecision;
+    public List<Creature> getCreatures(){
+        return _creatures;
     }
 
+    public long getLastSimulationTime(){
+        return _lastSimulationTime;
+    }
     public boolean isRunning() {
-        return isRunning;
+        return _isRunning;
     }
-    public void setRunning(boolean running) {
-        isRunning = running;
-
-        if (running) {
-            synchronized (populationSimulationThread.StopLock) {
-                populationSimulationThread.StopLock.notify();
-            }
-
-            if (populationSimulationThread.getState() == Thread.State.NEW)
-                populationSimulationThread.start();
-        }
-    }
-
     public boolean isRealTime() {
-        return realTime;
-    }
-    public void setRealTime(boolean realTime) {
-        this.realTime = realTime;
+        return _realTime;
     }
 
-    private PopulationSimulationThread populationSimulationThread;
+    /*package-private*/ Tile getTile(int positionX, int positionY) {
+        int tileX = positionX / _world.getTileMap().getTileSize();
+        int tileY = positionY / _world.getTileMap().getTileSize();
 
-    private Population(){
-        UnstagedTileEnergies = new ConcurrentHashMap<>();
-        Creatures = new ArrayList<>();
-        realTime = true;
-
-        //TODO ctm change
-        populationSimulationThread = new PopulationSimulationThread(this, CreatureThinkingMethod.CpuSingleThread);
-    }
-
-    public Population(VirtualWorld world, int timePrecision) {
-        this();
-
-        this.timePrecision = timePrecision;
-        World = world;
-        CollisionGrid = new List[(world.getTileMap().getWidth() * world.getTileMap().getTileSize() / Settings.CreatureSettings.CreatureSize) + 1][(world.getTileMap().getHeight() * world.getTileMap().getTileSize() / Settings.CreatureSettings.CreatureSize) + 1];
-        for (int x = 0; x < CollisionGrid.length; x++) {
-            Arrays.fill(CollisionGrid[x], new ArrayList());
-        }
-    }
-
-    public void ClearCollisionGrid() {
-        for (List[] lists : CollisionGrid) {
-            for (List list : lists) {
-                list.clear();
-            }
-        }
-    }
-
-    public void UpdateCollisionGrid(Creature c, int x, int y) {
-        int gridX = x / Settings.CreatureSettings.CreatureSize;
-        int gridY = y / Settings.CreatureSettings.CreatureSize;
-
-        if (gridX > 0 && gridY > 0 && gridX < CollisionGrid.length && gridY < CollisionGrid[gridX].length)
-            CollisionGrid[gridX][gridY].add(c);
-    }
-
-    public Tile getTile(int positionX, int positionY) {
-        int tileX = positionX / World.getTileMap().getTileSize();
-        int tileY = positionY / World.getTileMap().getTileSize();
-
-        if (tileX < 0 || tileY < 0 || tileX >= World.getTileMap().getWidth() || tileY >= World.getTileMap().getHeight())
+        if (tileX < 0 || tileY < 0 || tileX >= _world.getTileMap().getWidth() || tileY >= _world.getTileMap().getHeight())
             return Tile.Void;
 
-        return World.getTileMap().getReadyTiles()[tileX][tileY];
+        return _world.getTileMap().getTiles()[tileX][tileY];
     }
-
-    public Creature getCollidingCreature(int positionX, int positionY) {
-        if (positionX < 0 || positionY < 0 || positionX > World.getTileMap().getWidth() * World.getTileMap().getTileSize() || positionY > World.getTileMap().getHeight() * World.getTileMap().getTileSize())
+    /*package-private*/ Creature getCollidingCreature(int positionX, int positionY) {
+        if (
+                positionX < 0 || positionY < 0 ||
+                        positionX > _world.getTileMap().getWidth() * _world.getTileMap().getTileSize() ||
+                        positionY > _world.getTileMap().getHeight() * _world.getTileMap().getTileSize()
+        )
             return null;
 
-        List cs = CollisionGrid[positionX / Settings.CreatureSettings.CreatureSize][positionY / Settings.CreatureSettings.CreatureSize];
+        List cs = _collisionGrid[positionX / Settings.CreatureSettings.CreatureSize][positionY / Settings.CreatureSettings.CreatureSize];
 
         if (cs == null || cs.size() == 0) return null;
         else {
-            return (Creature) cs.get(new Random().nextInt(cs.size()));
+            return (Creature) cs.get(new Random().nextInt(cs.size()));  // return random colliding creature
         }
     }
 
-    public double Eat(int positionX, int positionY, double value) {
+    public void setLastSimulationTime(long time){ _lastSimulationTime = time; }
+    public void setRealTime(boolean realTime) { this._realTime = realTime; }
+    public void setRunning(boolean running) { _isRunning = running; }
+    /*package-private*/ void UpdateCollisionGrid(Creature c, int x, int y) {
+        int gridX = x / Settings.CreatureSettings.CreatureSize;
+        int gridY = y / Settings.CreatureSettings.CreatureSize;
+
+        if (gridX > 0 && gridY > 0 && gridX < _collisionGrid.length && gridY < _collisionGrid[gridX].length)
+            //noinspection unchecked    <-- IntelliJ IDEA specific
+            _collisionGrid[gridX][gridY].add(c);
+    }
+    /*package-private*/ double Eat(int positionX, int positionY, double value) {
         Tile t = getTile(positionX, positionY);
 
         if (t == null || t.getType() == TileType.Water || t == Tile.Void) return 0d;
 
-        return World.getTileMap().RequestConsumeEnergy(t, value);
+        return _world.getTileMap().RequestConsumeEnergy(t, value);
+    }
 
-        //TODO remove
-//        double maxE = 0;
-//
-//        if (UnstagedTileEnergies.containsKey(t)) {
-//            maxE = UnstagedTileEnergies.get(t);
-//        } else maxE = t.Energy;
-//
-//        if (value > maxE){
-//            value = maxE;
-//        }
-//
-//        if (value != 0) {
-//            World.getTileMap().EnqueueEnergyChange(positionX / World.getTileMap().getTileSize(), positionY / World.getTileMap().getTileSize(), -value, UnstagedTileEnergies, t);
-//
-//            UnstagedTileEnergies.put(t, maxE - value);
-//        }
-//        return value;
+
+    private Population(){
+        _creatures = new ArrayList<>();
+        _realTime = true;
+    }
+
+    public Population(VirtualWorld world) {
+        this();
+
+        _world = world;
+        _collisionGrid =
+                new List
+                        [(world.getTileMap().getWidth() * world.getTileMap().getTileSize() / Settings.CreatureSettings.CreatureSize) + 1]
+                        [(world.getTileMap().getHeight() * world.getTileMap().getTileSize() / Settings.CreatureSettings.CreatureSize) + 1];
+        for (List[] lists : _collisionGrid) {
+            Arrays.fill(lists, new ArrayList());
+        }
     }
 
     public void FillPopulation() {
         Random r = new Random();
 
-        int count = Settings.CreatureSettings.InitialPopulationSize - Creatures.size();
+        int count = Settings.CreatureSettings.InitialPopulationSize - _creatures.size();
 
         for (int i = 0; i < count; i++) {
             AddCreature(new Creature(
-                    r.nextInt(World.getTileMap().getWidth()) * World.getTileMap().getTileSize() + Settings.CreatureSettings.CreatureSize / 2,
-                    r.nextInt(World.getTileMap().getHeight()) * World.getTileMap().getTileSize() + Settings.CreatureSettings.CreatureSize / 2,
+                    r.nextInt(_world.getTileMap().getWidth()) * _world.getTileMap().getTileSize() + Settings.CreatureSettings.CreatureSize / 2,
+                    r.nextInt(_world.getTileMap().getHeight()) * _world.getTileMap().getTileSize() + Settings.CreatureSettings.CreatureSize / 2,
                     this));
         }
     }
 
     public void RemoveCreature(Creature creature) {
-        synchronized (CreatureLock){
-            Creatures.remove(creature);
+        synchronized (_creatureLock){
+            _creatures.remove(creature);
         }
     }
 
     public void AddCreature(Creature creature){
-        synchronized (CreatureLock){
-            Creatures.add(creature);
+        synchronized (_creatureLock){
+            _creatures.add(creature);
         }
     }
 
-    public List<Creature> getCreatures(){
-        return Creatures;
-    }
-
     public void Destroy() {
-        throw new NotImplementedException();
+        _creatures.clear();
     }
 
-    public long getLastSimulationTime(){
-        return LastSimulationTime;
+    public void Update(long deltaTime, boolean multiThread, ExecutorService threadPool){
+
+        Stack<Future> futures = null;
+        if (multiThread) futures = new Stack<>();
+
+        for (Creature c : _creatures)
+        {
+            c.Sense();                  // sense environment
+
+            if (!multiThread || threadPool == null)
+                c.getBrain().EvaluateCpu(); // think.. (single threaded)
+            else {
+                futures.push(threadPool.submit(() -> c.getBrain().EvaluateCpu())); // think.. (multi threaded)
+            }
+        }
+
+        if (multiThread){
+            while (!futures.empty()) {
+                try {
+                    futures.pop().get();
+                } catch (InterruptedException | ExecutionException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        ClearCollisionGrid();
+
+        for (int i = 0; i < _creatures.size(); i++) {
+            Creature c = _creatures.get(i);
+            c.Act(deltaTime);           // react on environment
+            if (c.isDestroyed()) i--;
+        }
+
+        // create new Creation when Population is too small
+        if (_creatures.size() < Settings.CreatureSettings.MinPopulationSize)
+            FillPopulation();
     }
 
-    public void setLastSimulationTime(long time){
-        LastSimulationTime = time;
-    }
-
-    public void ClearUnstagedEnergies() {
-        UnstagedTileEnergies.clear();
+    private void ClearCollisionGrid() {
+        for (List[] lists : _collisionGrid)
+            for (List list : lists)
+                list.clear();
     }
 }

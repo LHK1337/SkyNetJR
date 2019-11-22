@@ -42,15 +42,9 @@ public class PopulationRenderer extends Renderer {
             for (int j = 0; j < c.getFeelers().size(); j++) {
                 if (j >= c.getFeelers().size()) break;
                 Feeler f = c.getFeelers().get(j);
-                try {
-                    GL11.glVertex2i(offsetX + c.getPositionX(), offsetY + c.getPositionY());
-                    GL11.glVertex2i(offsetX + c.getPositionX() + (int) Math.round(Math.cos(f.Angle.getValue()) * f.Length.getValue()),
-                                    offsetY + c.getPositionY() + (int) Math.round(Math.sin(f.Angle.getValue()) * f.Length.getValue()));
-                }catch (NullPointerException e)
-                {
-                    //TODO Fix
-                    //! Synchronisationfehler
-                }
+                GL11.glVertex2d(offsetX + c.getPositionX(), offsetY + c.getPositionY());
+                GL11.glVertex2d(offsetX + c.getPositionX() + Math.cos(f.Angle.getValue()) * f.Length.getValue(),
+                                offsetY + c.getPositionY() + Math.sin(f.Angle.getValue()) * f.Length.getValue());
 
             }
             GL11.glEnd();
@@ -63,7 +57,7 @@ public class PopulationRenderer extends Renderer {
 
     @Override
     public void Destroy() {
-        population.Destroy();
+
     }
 
     public Population getPopulation() {

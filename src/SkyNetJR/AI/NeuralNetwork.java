@@ -116,7 +116,8 @@ public class NeuralNetwork {
         AddHiddenLayer(neurons, true);
     }
     public void AddHiddenLayer(int neurons, boolean rebuild) throws IndexOutOfBoundsException {
-        if (neurons <= 0) throw new IndexOutOfBoundsException("Hidden layer neurons <= 0");
+        if (neurons <= 0)
+            throw new IndexOutOfBoundsException("Hidden layer neurons <= 0");
 
         HiddenLayerNeurons.add(neurons);
 
@@ -124,9 +125,20 @@ public class NeuralNetwork {
     }
 
     public void RemoveLatestHiddenLayer() {
-        HiddenLayerNeurons.remove(HiddenLayerNeurons.size() - 1);
+        if (HiddenLayerNeurons.size() > 1)
+        {
+            HiddenLayerNeurons.remove(HiddenLayerNeurons.size() - 1);
 
-        RebuildAllWeights();
+            RebuildAllWeights();
+        }
+    }
+    public void RemoveRandomHiddenLayer() {
+        if (HiddenLayerNeurons.size() > 1)
+        {
+            HiddenLayerNeurons.remove(new Random().nextInt(HiddenLayerNeurons.size()));
+
+            RebuildAllWeights();
+        }
     }
 
     public void AddInput(NeuralProperty np){

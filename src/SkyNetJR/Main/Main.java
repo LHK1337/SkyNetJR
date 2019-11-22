@@ -2,14 +2,21 @@ package SkyNetJR.Main;
 
 import SkyNetJR.Creatures.Population;
 import SkyNetJR.Graphics.GLFWWindowManager.WindowManager;
+import SkyNetJR.Graphics.Rendering.Renderers.PopulationRenderer;
 import SkyNetJR.Graphics.Rendering.Renderers.VirtualWorldRenderer;
 import SkyNetJR.Graphics.Rendering.View;
 import SkyNetJR.Settings;
+import SkyNetJR.Threading.SimulationThread;
 import SkyNetJR.VirtualWorld.TileMap;
 import SkyNetJR.VirtualWorld.VirtualWorld;
 
 public class Main {
     private static Object Lock = new Object();
+
+    public static VirtualWorld World;
+    public static Population Population;
+    public static View WorldView;
+    public static SimulationThread SimulationThread;
 
     public static void main(String[] args) {
         Thread.currentThread().setName("MainThread");
@@ -18,51 +25,53 @@ public class Main {
         wm.Init();
 
         // create World view
-        View worldView = new View(Settings.ViewSettings.Width, Settings.ViewSettings.Height, "SkyNetJR", true, wm);
+        WorldView = new View(Settings.ViewSettings.Width, Settings.ViewSettings.Height, "SkyNetJR", true, wm);
 
         TileMap map = new TileMap();
         map.SetDefaults();
         map.Generate();
-        VirtualWorld world = new VirtualWorld(map, Settings.SimulationSettings.TimePrecision);
-        world.setRunning(true);
+        World = new VirtualWorld(map);
+        World.setRunning(true);
 
-        worldView.getRenderers().add(new VirtualWorldRenderer(world));
+        WorldView.getRenderers().add(new VirtualWorldRenderer(World));
 
-        Population population = new Population(world, Settings.SimulationSettings.TimePrecision);
-        population.FillPopulation();
-        population.setRunning(true);
+        Population = new Population(World);
+        Population.FillPopulation();
+        Population.setRunning(true);
 
+        WorldView.getRenderers().add(new PopulationRenderer(Population));
 
-        //! GOING FOR THE REWRITE XDDDDDDDDD
-        //
-        //
-        //
-        //
-        //
-        //
-        //
-        //
-        //? :,,,,,,,,,,,,,,,,(
-
-
-        //worldView.getRenderers().add(new PopulationRenderer(population));
-
-
+        SimulationThread = new SimulationThread(World, Population, true, Settings.SimulationSettings.TimePrecision);
+        SimulationThread.start();
 
 //        ValueNoise2D noise = new ValueNoise2D(1280, 720, GenerationInfo.GetDefaults());
 //        noise.Calculate();
 
-//        worldView.getRenderers().add(new NoiseRenderer(noise));
+//        WorldView.getRenderers().add(new NoiseRenderer(noise));
 
-        worldView.Start();
+        WorldView.Start();
 
-        while (!worldView.getDestroyed()) {
+        while (!WorldView.getDestroyed()) {
+            System.out.println(
+                    (SimulationThread.isRealTime() ? "[RT]" : "[FF]") +
+                    " PST: " + Population.getLastSimulationTime() + "ms" +
+                    " WST: " + World.getLastSimulationTime() + "ms" +
+                    " CST: " + SimulationThread.getLastSimulationTime() + "ms" +
+                    " | Creatures: " + Population.getCreatures().size() +
+                    " | Time/Creature: " + (float)Population.getLastSimulationTime() / (float)Population.getCreatures().size() + "ms"
+            );
+
             try {
-                Thread.sleep(500);
+                Thread.sleep(1000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }
+
+        SimulationThread.Destroy();
+
+        World.Destroy();
+        Population.Destroy();
 
         wm.Destroy();
     }

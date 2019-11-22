@@ -34,8 +34,8 @@ public class Creature {
     private double SpecificAgingFactor;
 
     private final long Generation;
-    private int PositionX;
-    private int PositionY;
+    private double PositionX;
+    private double PositionY;
     private double Rotation;
 
     private Population Population;
@@ -45,11 +45,11 @@ public class Creature {
     private boolean destroyed;
     private boolean inhibit;
 
-    public Creature(int positionX, int positionY, Population population){
+    public Creature(double positionX, double positionY, Population population){
         this(positionX, positionY, 0, population);
     }
 
-    public Creature(int positionX, int positionY, long generation, Population population) {
+    public Creature(double positionX, double positionY, long generation, Population population) {
         Population = population;
         Generation = generation;
 
@@ -94,45 +94,46 @@ public class Creature {
         brain = new NeuralNetwork(parent.brain);
 
         NeuralProperty[] ins = parent.getBrain().getInputs();
-        for (int i = 0; i < ins.length; i++) {
-            switch (ins[i].getType()){
-                case Bias: break;
-                case EnergySelf: brain.AddInput(Energy, false); break;
-                case Age: brain.AddInput(Age, false); break;
-                case EnergyOnCurrentTile: brain.AddInput(EnergyOnCurrentTile, false); break;
-                case CurrentTileWater: brain.AddInput(CurrentTileWater, false); break;
-                case WasAttacked: brain.AddInput(WasAttacked, false); break;
-                case WasHealed: brain.AddInput(WasHealed, false); break;
+        for (NeuralProperty in : ins) {
+            switch (in.getType()) { case Bias: break;
+                case EnergySelf: brain.AddInput(Energy, false);break;
+                case Age: brain.AddInput(Age, false);break;
+                case EnergyOnCurrentTile: brain.AddInput(EnergyOnCurrentTile, false);break;
+                case CurrentTileWater: brain.AddInput(CurrentTileWater, false);break;
+                case WasAttacked: brain.AddInput(WasAttacked, false);break;
+                case WasHealed: brain.AddInput(WasHealed, false);break;
 
                 // Feelers
-                case FeelsWater: brain.AddInput(Feelers.get(ins[i].getTag()).FeelsWater, false); break;
-                case EnergyValueFeeler: brain.AddInput(Feelers.get(ins[i].getTag()).EnergyValueFeeler, false); break;
-                case FeelsCreature: brain.AddInput(Feelers.get(ins[i].getTag()).FeelsCreature, false); break;
-                case GeneticDifference: brain.AddInput(Feelers.get(ins[i].getTag()).GeneticDifference, false); break;
-                case OtherCreatureAge: brain.AddInput(Feelers.get(ins[i].getTag()).OtherCreatureAge, false); break;
-                case OtherCreatureEnergy: brain.AddInput(Feelers.get(ins[i].getTag()).OtherCreatureEnergy, false); break;
+                case FeelsWater: brain.AddInput(Feelers.get(in.getTag()).FeelsWater, false);break;
+                case EnergyValueFeeler: brain.AddInput(Feelers.get(in.getTag()).EnergyValueFeeler, false);break;
+                case FeelsCreature: brain.AddInput(Feelers.get(in.getTag()).FeelsCreature, false);break;
+                case GeneticDifference: brain.AddInput(Feelers.get(in.getTag()).GeneticDifference, false);break;
+                case OtherCreatureAge: brain.AddInput(Feelers.get(in.getTag()).OtherCreatureAge, false);break;
+                case OtherCreatureEnergy: brain.AddInput(Feelers.get(in.getTag()).OtherCreatureEnergy, false);break;
             }
         }
 
         NeuralProperty[] outs = parent.getBrain().getOutputs();
-        for (int i = 0; i < outs.length; i++) {
-            switch (outs[i].getType()){
+        for (NeuralProperty out : outs) {
+            switch (out.getType()) {
                 case Rotate: brain.AddOutput(RotationChange, false); break;
                 case Forward: brain.AddOutput(Forward, false); break;
                 case Eat: brain.AddOutput(Eat, false); break;
                 case Replicate: brain.AddOutput(Replicate, false); break;
 
                 //Feelers
-                case FeelerAngle: brain.AddOutput(Feelers.get(outs[i].getTag()).Angle, false); break;
-                case FeelerLength: brain.AddOutput(Feelers.get(outs[i].getTag()).Length, false); break;
-                case Attack: brain.AddOutput(Feelers.get(outs[i].getTag()).Attack, false); break;
-                case Heal: brain.AddOutput(Feelers.get(outs[i].getTag()).Heal, false); break;
+                case FeelerAngle: brain.AddOutput(Feelers.get(out.getTag()).Angle, false); break;
+                case FeelerLength: brain.AddOutput(Feelers.get(out.getTag()).Length, false); break;
+                case Attack: brain.AddOutput(Feelers.get(out.getTag()).Attack, false); break;
+                case Heal: brain.AddOutput(Feelers.get(out.getTag()).Heal, false); break;
             }
         }
     }
 
     private void InitNewBrain(){
         brain = new NeuralNetwork();
+
+        brain.AddHiddenLayer(Settings.CreatureSettings.BaseHiddenNeurons, false);
 
         brain.AddInput(Energy, false);
         brain.AddInput(Age, false);
@@ -189,12 +190,16 @@ public class Creature {
     private void MutateFeelers(){
         Random r = new Random();
 
-        if (r.nextDouble() >= Settings.CreatureSettings.MutationRates.FeelerMutationChance){
+        if (r.nextDouble() >= Settings.CreatureSettings.MutationRates.FeelerMutationChance) {
             if (r.nextDouble() >= Settings.CreatureSettings.MutationRates.FeelerAddRemoveThreshold)
             {
                 AddFeeler();
+                //System.out.println("[MUTATION] Feeler+");
             }else {
-                if (Feelers.size() > 1) RemoveFeeler();
+                if (Feelers.size() > 1){
+                    RemoveFeeler();
+                    //System.out.println("[MUTATION] Feeler-");
+                }
             }
         }
     }
@@ -204,8 +209,14 @@ public class Creature {
 
         if (r.nextDouble() >= Settings.CreatureSettings.MutationRates.BrainMutationChance){
             if (r.nextDouble() >= Settings.CreatureSettings.MutationRates.HiddenLayerAddRemoveThreshold){
-                if (brain.getHiddenLayerCount() > 1)
-                    brain.AddHiddenLayer(r.nextInt(Settings.CreatureSettings.MutationRates.MaxHiddenNeuronsPerLayer));
+                brain.AddHiddenLayer(1 + r.nextInt(Settings.CreatureSettings.MutationRates.MaxHiddenNeuronsPerLayer - 1));
+                //System.out.println("[MUTATION] Hidden Layer+");
+            }
+            else
+            {
+                //brain.RemoveLatestHiddenLayer();
+                brain.RemoveRandomHiddenLayer();
+                //System.out.println("[MUTATION] Hidden Layer-");
             }
         }
 
@@ -255,7 +266,7 @@ public class Creature {
         // Energy - as it is
         // Age - as it is
 
-        Tile t = Population.getTile(PositionX, PositionY);
+        Tile t = Population.getTile((int)PositionX, (int)PositionY);
 
         // EnergyOnCurrentTile
         EnergyOnCurrentTile.setValue(t.Energy);
@@ -271,8 +282,8 @@ public class Creature {
 
         // Feeler
         for (Feeler feeler : Feelers) {
-            int feelsOnX = PositionX + (int) Math.round(Math.cos(feeler.Angle.getValue()) / feeler.Length.getValue());
-            int feelsOnY = PositionY + (int) Math.round(Math.sin(feeler.Angle.getValue()) / feeler.Length.getValue());
+            int feelsOnX = (int) (Math.round(PositionX + Math.cos(feeler.Angle.getValue()) / feeler.Length.getValue()));
+            int feelsOnY = (int) (Math.round(PositionY + Math.sin(feeler.Angle.getValue()) / feeler.Length.getValue()));
 
             t = Population.getTile(feelsOnX, feelsOnY);
 
@@ -323,21 +334,22 @@ public class Creature {
 
         // Eat
         // Todo: Test case when Eat < 0
-        Energy.setValue(Energy.getValue() + Population.Eat(PositionX, PositionY, Eat.getValue() * Settings.CreatureSettings.MaxEatPortion));
+        Energy.setValue(Energy.getValue() + Population.Eat((int)PositionX, (int)PositionY, Eat.getValue() * Settings.CreatureSettings.MaxEatPortionPerSecond * deltaTime / 1000));
 
         // Rotation
-        Rotation += RotationChange.getValue() * Settings.CreatureSettings.RotationRange;
+        Rotation += RotationChange.getValue() * Settings.CreatureSettings.RotationRangePerSecond * deltaTime / 1000;
 
         // Forward
-        Energy.setValue(Energy.getValue() - (Settings.CreatureSettings.MovingEnergyDrainPerPixel * Math.abs(Forward.getValue()) * Settings.CreatureSettings.MovingRange));
+        double move = Settings.CreatureSettings.MovingRangePerSecond * deltaTime / 1000;
+        Energy.setValue(Energy.getValue() - (Settings.CreatureSettings.MovingEnergyDrainPerPixel * Math.abs(Forward.getValue()) * move));
 
-        double moveX = Math.cos(Rotation) * (Forward.getValue() * Settings.CreatureSettings.MovingRange);
-        double moveY = Math.sin(Rotation) * (Forward.getValue() * Settings.CreatureSettings.MovingRange);
+        double moveX = Math.cos(Rotation) * (Forward.getValue() * move);
+        double moveY = Math.sin(Rotation) * (Forward.getValue() * move);
 
-        PositionX += (int)Math.round(moveX);
-        PositionY += (int)Math.round(moveY);
+        PositionX += moveX;
+        PositionY += moveY;
 
-        Population.UpdateCollisionGrid(this, PositionX, PositionY);
+        Population.UpdateCollisionGrid(this, (int) PositionX, (int) PositionY);
 
         // Replication
         if (Age.getValue() >= Settings.CreatureSettings.ReplicationMinAge){
@@ -394,17 +406,29 @@ public class Creature {
         RotationChange.setValue(value);
     }
 
-    public int getPositionY(){
+    public double getPositionY(){
         return PositionY;
     }
-    public void setPositionY(int value){
+    public void setPositionY(double value){
         PositionY = value;
     }
 
-    public int getPositionX(){
+    public double getPositionX(){
         return PositionX;
     }
-    public void setPositionX(int value){
+    public void setPositionX(double value){
+        PositionX = value;
+    }
+
+    public int getPositionYi(){ return (int)PositionY; }
+    public void setPositionYi(int value){
+        PositionY = value;
+    }
+
+    public int getPositionXi(){
+        return (int)PositionX;
+    }
+    public void setPositionXi(int value){
         PositionX = value;
     }
 
