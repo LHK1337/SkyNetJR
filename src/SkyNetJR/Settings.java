@@ -15,9 +15,9 @@ public class Settings {
 
     // World Settings
     public static class WorldSettings {
-        public static final int Width = 640;
-        public static final int Height = 360;
-        public static final int TileSize = 2;
+        public static final int Width = 300;
+        public static final int Height = 184;
+        public static final int TileSize = 5;
         public static final Vector3d MaxEnergyColor = new Vector3d(0.25d, 0.8d, 0d);
         public static final Vector3d WaterColor = new Vector3d(0d, 0.5d, 1d);
     }
@@ -38,13 +38,13 @@ public class Settings {
 
     // View Settings
     public static class ViewSettings {
-        public static final int Width = 1280;
-        public static final int Height = 720;
+        public static final int Width = 1500;
+        public static final int Height = 920;
     }
 
     // Creature Settings
     public static class CreatureSettings {
-        public static final boolean CanFeelOnBody = false;
+        public static final boolean CanFeelOnBody = true;
         public static final double BaseEnergy = 400d;
         public static final double AgingVariance = 10;
         public static final double ReplicationMinAge = 10d;
@@ -59,7 +59,7 @@ public class Settings {
         public static final double RotationRangePerSecond = 2 * Math.PI;
         public static final double MovingRangePerSecond = 120;
         public static final double MaxEatPortionPerSecond = 1200;
-        public static final int CreatureSize = 5;
+        public static final int CreatureSize = 8;
         public static final int MinPopulationSize = 25;
         public static final int InitialPopulationSize = 300;
         public static final double InitialFeelerLength = 8;
@@ -69,14 +69,15 @@ public class Settings {
 
 
         public static class MutationRates{
-            public static final double InitialWeightRange = 0.01d;
-            public static final double Genetics = 0.004d;
-            public static final double Weights = 0.05d;
-            public static final double FeelerMutationChance = 0.009d;
+            public static final double InitialWeightRange = 1d;
+            public static final double Genetics = 0.05d;
+            public static final double Weights = 0.1d;
+            public static final double FeelerMutationChance = 0.09d;
             public static final double FeelerAddRemoveThreshold = 0.5d;
-            public static final double BrainMutationChance = 0.0008d;
+            public static final double BrainMutationChance = 0.08d;
             public static final double HiddenLayerAddRemoveThreshold = 0.5d;
-            public static final int MaxHiddenNeuronsPerLayer = 8;
+            public static final int MaxHiddenNeuronsPerLayer = 10;
+            public static final int MinHiddenNeuronsPerLayer = 4;
         }
     }
 }

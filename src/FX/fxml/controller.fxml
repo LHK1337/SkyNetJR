@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.AnchorPane?>
+<AnchorPane prefHeight="167.0" prefWidth="380.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="FX.fxml.Controller">
+   <children>
+      <Slider id="0" layoutX="14.0" layoutY="14.0" min="-100.0" orientation="VERTICAL" prefHeight="140.0" prefWidth="30.0" />
+      <Slider id="1" layoutX="44.0" layoutY="14.0" min="-100.0" orientation="VERTICAL" prefHeight="140.0" prefWidth="30.0" />
+      <Slider id="2" layoutX="74.0" layoutY="14.0" min="-100.0" orientation="VERTICAL" prefHeight="140.0" prefWidth="30.0" />
+      <Slider id="3" layoutX="104.0" layoutY="14.0" min="-100.0" orientation="VERTICAL" prefHeight="140.0" prefWidth="30.0" />
+      <Slider id="4" layoutX="134.0" layoutY="14.0" min="-100.0" orientation="VERTICAL" prefHeight="140.0" prefWidth="30.0" />
+      <Slider id="5" layoutX="164.0" layoutY="14.0" min="-100.0" orientation="VERTICAL" prefHeight="140.0" prefWidth="30.0" />
+      <Slider id="6" layoutX="194.0" layoutY="14.0" min="-100.0" orientation="VERTICAL" prefHeight="140.0" prefWidth="30.0" />
+      <Slider id="7" layoutX="224.0" layoutY="14.0" min="-100.0" orientation="VERTICAL" prefHeight="140.0" prefWidth="30.0" />
+      <Slider id="8" layoutX="254.0" layoutY="14.0" min="-100.0" orientation="VERTICAL" prefHeight="140.0" prefWidth="30.0" />
+      <Slider id="9" layoutX="284.0" layoutY="14.0" min="-100.0" orientation="VERTICAL" prefHeight="140.0" prefWidth="30.0" />
+      <Slider id="10" layoutX="314.0" layoutY="14.0" min="-100.0" orientation="VERTICAL" prefHeight="140.0" prefWidth="30.0" />
+      <Slider id="11" layoutX="344.0" layoutY="14.0" min="-100.0" orientation="VERTICAL" prefHeight="140.0" prefWidth="30.0" />
+   </children>
+</AnchorPane>

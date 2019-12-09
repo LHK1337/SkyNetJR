@@ -21,10 +21,10 @@ public class VirtualWorldRenderer extends Renderer {
 
         GL11.glColor3d(Settings.WorldSettings.WaterColor.x, Settings.WorldSettings.WaterColor.y, Settings.WorldSettings.WaterColor.z);
         GL11.glBegin(GL11.GL_QUADS);
-        GL11.glVertex2i(offsetX + positionX, offsetY + positionY);
-        GL11.glVertex2i(offsetX + positionX + (map.getWidth() * map.getTileSize()), offsetY + positionY);
-        GL11.glVertex2i(offsetX + positionX + (map.getWidth() * map.getTileSize()), offsetY + positionY + (map.getHeight() * map.getTileSize()));
-        GL11.glVertex2i(offsetX + positionX, offsetY + positionY + (map.getHeight() * map.getTileSize()));
+        GL11.glVertex2i(offsetX, offsetY);
+        GL11.glVertex2i(offsetX + (map.getWidth() * map.getTileSize()), offsetY);
+        GL11.glVertex2i(offsetX + (map.getWidth() * map.getTileSize()), offsetY + (map.getHeight() * map.getTileSize()));
+        GL11.glVertex2i(offsetX, offsetY + (map.getHeight() * map.getTileSize()));
         GL11.glEnd();
 
         Tile[][] t = map.getTiles();
@@ -41,34 +41,34 @@ public class VirtualWorldRenderer extends Renderer {
 
                     if (n[0] == TileType.Water && n[1] == TileType.Water && n[2] == TileType.Land && n[3] == TileType.Land) {
                         GL11.glBegin(GL11.GL_TRIANGLES);
-                        GL11.glVertex2i(offsetX + positionX + ((x + 1) * map.getTileSize()), offsetY + positionY + (y * map.getTileSize()));
-                        GL11.glVertex2i(offsetX + positionX + ((x + 1) * map.getTileSize()), offsetY + positionY + ((y + 1) * map.getTileSize()));
-                        GL11.glVertex2i(offsetX + positionX + (x * map.getTileSize()), offsetY + positionY + ((y + 1) * map.getTileSize()));
+                        GL11.glVertex2i(offsetX + ((x + 1) * map.getTileSize()), offsetY + (y * map.getTileSize()));
+                        GL11.glVertex2i(offsetX + ((x + 1) * map.getTileSize()), offsetY + ((y + 1) * map.getTileSize()));
+                        GL11.glVertex2i(offsetX + (x * map.getTileSize()), offsetY + ((y + 1) * map.getTileSize()));
 
                     } else if (n[0] == TileType.Land && n[1] == TileType.Water && n[2] == TileType.Water && n[3] == TileType.Land) {
                         GL11.glBegin(GL11.GL_TRIANGLES);
-                        GL11.glVertex2i(offsetX + positionX + (x * map.getTileSize()), offsetY + positionY + (y * map.getTileSize()));
-                        GL11.glVertex2i(offsetX + positionX + ((x + 1) * map.getTileSize()), offsetY + positionY + ((y + 1) * map.getTileSize()));
-                        GL11.glVertex2i(offsetX + positionX + (x * map.getTileSize()), offsetY + positionY + ((y + 1) * map.getTileSize()));
+                        GL11.glVertex2i(offsetX + (x * map.getTileSize()), offsetY + (y * map.getTileSize()));
+                        GL11.glVertex2i(offsetX + ((x + 1) * map.getTileSize()), offsetY + ((y + 1) * map.getTileSize()));
+                        GL11.glVertex2i(offsetX + (x * map.getTileSize()), offsetY + ((y + 1) * map.getTileSize()));
 
                     } else if (n[0] == TileType.Land && n[1] == TileType.Land && n[2] == TileType.Water && n[3] == TileType.Water) {
                         GL11.glBegin(GL11.GL_TRIANGLES);
-                        GL11.glVertex2i(offsetX + positionX + (x * map.getTileSize()), offsetY + positionY + (y * map.getTileSize()));
-                        GL11.glVertex2i(offsetX + positionX + ((x + 1) * map.getTileSize()), offsetY + positionY + (y * map.getTileSize()));
-                        GL11.glVertex2i(offsetX + positionX + (x * map.getTileSize()), offsetY + positionY + ((y + 1) * map.getTileSize()));
+                        GL11.glVertex2i(offsetX + (x * map.getTileSize()), offsetY + (y * map.getTileSize()));
+                        GL11.glVertex2i(offsetX + ((x + 1) * map.getTileSize()), offsetY + (y * map.getTileSize()));
+                        GL11.glVertex2i(offsetX + (x * map.getTileSize()), offsetY + ((y + 1) * map.getTileSize()));
 
                     } else if (n[0] == TileType.Water && n[1] == TileType.Land && n[2] == TileType.Land && n[3] == TileType.Water) {
                         GL11.glBegin(GL11.GL_TRIANGLES);
-                        GL11.glVertex2i(offsetX + positionX + (x * map.getTileSize()), offsetY + positionY + (y * map.getTileSize()));
-                        GL11.glVertex2i(offsetX + positionX + ((x + 1) * map.getTileSize()), offsetY + positionY + (y * map.getTileSize()));
-                        GL11.glVertex2i(offsetX + positionX + ((x + 1) * map.getTileSize()), offsetY + positionY + ((y + 1) * map.getTileSize()));
+                        GL11.glVertex2i(offsetX + (x * map.getTileSize()), offsetY + (y * map.getTileSize()));
+                        GL11.glVertex2i(offsetX + ((x + 1) * map.getTileSize()), offsetY + (y * map.getTileSize()));
+                        GL11.glVertex2i(offsetX + ((x + 1) * map.getTileSize()), offsetY + ((y + 1) * map.getTileSize()));
 
                     } else {
                         GL11.glBegin(GL11.GL_QUADS);
-                        GL11.glVertex2i(offsetX + positionX + (x * map.getTileSize()), offsetY + positionY + (y * map.getTileSize()));
-                        GL11.glVertex2i(offsetX + positionX + ((x + 1) * map.getTileSize()), offsetY + positionY + (y * map.getTileSize()));
-                        GL11.glVertex2i(offsetX + positionX + ((x + 1) * map.getTileSize()), offsetY + positionY + ((y + 1) * map.getTileSize()));
-                        GL11.glVertex2i(offsetX + positionX + (x * map.getTileSize()), offsetY + positionY + ((y + 1) * map.getTileSize()));
+                        GL11.glVertex2i(offsetX + (x * map.getTileSize()), offsetY + (y * map.getTileSize()));
+                        GL11.glVertex2i(offsetX + ((x + 1) * map.getTileSize()), offsetY + (y * map.getTileSize()));
+                        GL11.glVertex2i(offsetX + ((x + 1) * map.getTileSize()), offsetY + ((y + 1) * map.getTileSize()));
+                        GL11.glVertex2i(offsetX + (x * map.getTileSize()), offsetY + ((y + 1) * map.getTileSize()));
                     }
 
                     GL11.glEnd();

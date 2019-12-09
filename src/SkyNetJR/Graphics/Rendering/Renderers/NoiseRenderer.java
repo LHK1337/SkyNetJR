@@ -19,7 +19,7 @@ public class NoiseRenderer extends Renderer {
         for (int x = 0; x < noise.WIDTH; x++) {
             for (int y = 0; y < noise.HEIGHT; y++) {
                 GL11.glColor3d(noise.getHeightMap()[x][y], noise.getHeightMap()[x][y], noise.getHeightMap()[x][y]);
-                GL11.glVertex2i(x, y);
+                GL11.glVertex2i(offsetX + x, offsetY + y);
             }
         }
 

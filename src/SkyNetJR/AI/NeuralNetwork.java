@@ -10,6 +10,7 @@ public class NeuralNetwork {
     private List<NeuralProperty> Inputs;
     private List<NeuralProperty> Outputs;
     private List<Integer> HiddenLayerNeurons;
+    private List<double[]> HiddenNeuronActivities;
 
     // Weight matrix: [inputCount][outputCounts]
 
@@ -32,6 +33,7 @@ public class NeuralNetwork {
 
         Outputs = new ArrayList<>();
         HiddenLayerNeurons = new ArrayList<>();
+        HiddenNeuronActivities = new ArrayList<>();
     }
 
     public NeuralNetwork(NeuralNetwork nn){
@@ -55,39 +57,39 @@ public class NeuralNetwork {
         return i;
     }
 
-    private static double ActivationFunction(double x){
+    public static double ActivationFunction(double x){
         //return Sigmoid(x);
         return TangentHyperbolic(x);
     }
     
-    private static double Sigmoid(double x) {
-        return (1/( 1 + Math.pow(Math.E,(-1*x))));
-    }
+    private static double Sigmoid(double x) { return ((2/(1 + Math.pow(Math.E,(-1*x)))) - 1); }
 
     private static double TangentHyperbolic(double x){ return Math.tanh(x); }
 
     public void EvaluateCpu(){
         if (Destroyed) return;
 
+        HiddenNeuronActivities.clear();
         double[][] v = new double[getHighestNeuronCount()][2];
 
         for (int i = 0; i < Inputs.size(); i++) {
             v[i][0] = (double) Inputs.get(i).getValue();
         }
 
-        int i = 0;
-        for (; i < Weights.size(); i++) {
-            double[][] matrix = Weights.get(i);
+        for (int i = 0; i < Weights.size(); i++) {
+            double[][] layer = Weights.get(i);
+            HiddenNeuronActivities.add(new double[layer.length]);
 
-            for (int j = 0; j < matrix.length; j++) {
-                for (int k = 0; k < matrix[j].length; k++) {
-                    if (k == 0) v[j][1] = matrix[j][k] * v[k][0];
-                    else v[j][1] += matrix[j][k] * v[k][0];
+            for (int j = 0; j < layer.length; j++) {
+                v[j][1] = 0;
+                for (int k = 0; k < layer[j].length; k++) {
+                    v[j][1] += v[k][0] * layer[j][k];
                 }
             }
 
-            for (int j = 0; j < v.length; j++) {
-                v[j][0] = ActivationFunction(v[j][1]);  // Activation Function
+            for (int j = 0; j < layer.length; j++) {
+                v[j][0] = ActivationFunction(v[j][1]);
+                HiddenNeuronActivities.get(HiddenNeuronActivities.size() - 1)[j] = v[j][0];
             }
         }
 
@@ -227,6 +229,9 @@ public class NeuralNetwork {
     }
 
     public Object getWeightsLock() { return WeightsLock; }
+    public List<double[][]> getWeights(){
+        return Weights;
+    }
 
     public void PrintWeights(){
         System.out.println("Inputs: " + Inputs.size());
@@ -257,6 +262,10 @@ public class NeuralNetwork {
 
     public int getHiddenLayerCount() {
         return HiddenLayerNeurons.size();
+    }
+
+    public List<double[]> getHiddenNeuronActivities(){
+        return HiddenNeuronActivities;
     }
 
     public void Destroy() {

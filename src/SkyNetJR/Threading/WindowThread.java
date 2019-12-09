@@ -110,7 +110,7 @@ public class WindowThread extends DestroyableThread {
 
             try {
                 for (Renderer renderer : view.getRenderers()) {
-                    renderer.Render(0, 0);
+                    renderer.Render(renderer.getPositionX(), renderer.getPositionY());
                 }
             } catch (Exception e)
             {

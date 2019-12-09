@@ -144,6 +144,7 @@ public class Creature {
         }
         brain.AddInput(WasAttacked, false);
         brain.AddInput(WasHealed, false);
+
         brain.AddOutput(RotationChange, false);
         brain.AddOutput(Forward, false);
         brain.AddOutput(Eat, false);
@@ -209,7 +210,7 @@ public class Creature {
 
         if (r.nextDouble() >= Settings.CreatureSettings.MutationRates.BrainMutationChance){
             if (r.nextDouble() >= Settings.CreatureSettings.MutationRates.HiddenLayerAddRemoveThreshold){
-                brain.AddHiddenLayer(1 + r.nextInt(Settings.CreatureSettings.MutationRates.MaxHiddenNeuronsPerLayer - 1));
+                brain.AddHiddenLayer(Settings.CreatureSettings.MutationRates.MinHiddenNeuronsPerLayer + r.nextInt(Settings.CreatureSettings.MutationRates.MaxHiddenNeuronsPerLayer - Settings.CreatureSettings.MutationRates.MinHiddenNeuronsPerLayer));
                 //System.out.println("[MUTATION] Hidden Layer+");
             }
             else

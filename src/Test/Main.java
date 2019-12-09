@@ -8,7 +8,8 @@ public class Main {
         WindowManager wm = new WindowManager();
         wm.Init();
 
-        View v = new View(1280, 720, "SkyNetJR::Test", true, wm);
+        View v = new View(1500, 920, "SkyNetJR::Test", true, wm);
+
         v.Start();
 
         while (!v.getDestroyed()) {
