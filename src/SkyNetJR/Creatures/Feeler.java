@@ -9,12 +9,12 @@ public class Feeler {
     public Feeler(byte tag){
         Tag = tag;
 
-        FeelsWater = new NeuralProperty<>(NeuralPropertyType.FeelsWater, Tag);
-        EnergyValueFeeler = new NeuralProperty<>(NeuralPropertyType.EnergyValueFeeler, Tag);
-        FeelsCreature = new NeuralProperty<>(NeuralPropertyType.FeelsCreature, Tag);
-        GeneticDifference = new NeuralProperty<>(NeuralPropertyType.GeneticDifference, Tag);
-        OtherCreatureAge = new NeuralProperty<>(NeuralPropertyType.OtherCreatureAge, Tag);
-        OtherCreatureEnergy = new NeuralProperty<>(NeuralPropertyType.OtherCreatureEnergy, Tag);
+        NeuralInFeelsWater = new NeuralProperty<>(NeuralPropertyType.FeelsWater, Tag);
+        NeuralInEnergyValueFeeler = new NeuralProperty<>(NeuralPropertyType.EnergyValueFeeler, Tag);
+        NeuralInFeelsCreature = new NeuralProperty<>(NeuralPropertyType.FeelsCreature, Tag);
+        NeuralInGeneticDifference = new NeuralProperty<>(NeuralPropertyType.GeneticDifference, Tag);
+        NeuralInOtherCreatureAge = new NeuralProperty<>(NeuralPropertyType.OtherCreatureAge, Tag);
+        NeuralInOtherCreatureEnergy = new NeuralProperty<>(NeuralPropertyType.OtherCreatureEnergy, Tag);
         Angle = new NeuralProperty<>(NeuralPropertyType.FeelerAngle, Tag);
         Length = new NeuralProperty<>(NeuralPropertyType.FeelerLength, Tag);
         Attack = new NeuralProperty<>(NeuralPropertyType.Attack, Tag);
@@ -22,12 +22,12 @@ public class Feeler {
     }
 
     // Sensing
-    public NeuralProperty<Double> FeelsWater;
-    public NeuralProperty<Double> EnergyValueFeeler;
-    public NeuralProperty<Double> FeelsCreature;
-    public NeuralProperty<Double> GeneticDifference;
-    public NeuralProperty<Double> OtherCreatureAge;
-    public NeuralProperty<Double> OtherCreatureEnergy;
+    public NeuralProperty<Double> NeuralInFeelsWater;
+    public NeuralProperty<Double> NeuralInEnergyValueFeeler;
+    public NeuralProperty<Double> NeuralInFeelsCreature;
+    public NeuralProperty<Double> NeuralInGeneticDifference;
+    public NeuralProperty<Double> NeuralInOtherCreatureAge;
+    public NeuralProperty<Double> NeuralInOtherCreatureEnergy;
 
     // Acting
     public NeuralProperty<Double> Angle;

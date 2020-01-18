@@ -27,7 +27,7 @@ public class PopulationRenderer extends Renderer {
                 i--; continue;
             }
 
-            if (c.inhibits()) break;
+            if (c.inhibits() || !c.getDraw()) continue;
 
             GL11.glColor3d(c.getGenetics().x, c.getGenetics().y, c.getGenetics().z);
             GL11.glBegin(GL11.GL_QUADS);

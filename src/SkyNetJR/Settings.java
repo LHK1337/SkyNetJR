@@ -4,6 +4,12 @@ import org.joml.Vector3d;
 import java.util.Random;
 
 public class Settings {
+    // TODO
+    // Normalize NeuronInputs
+    // Serialization
+    // Settings Windows
+    // Diagnostics
+
     // World Generation Settings
     public static class GenerationSettings {
         public static final double LandThreshold = 0.6d;
@@ -47,7 +53,8 @@ public class Settings {
         public static final boolean CanFeelOnBody = true;
         public static final double BaseEnergy = 400d;
         public static final double AgingVariance = 10;
-        public static final double ReplicationMinAge = 10d;
+        //? public static final double ReplicationMinAge = 10d;
+        public static final double ReplicationMinAge = 9999999999999d;
         public static final double EnergyDrainPerSecond = 4d;
         public static final double EnergyDrainOnWaterPerSecond = 800d;
         public static final double EnergyDrainPerReplication = 600d;
@@ -56,16 +63,18 @@ public class Settings {
         public static final double EnergyDrainPerFeelerPerSecond = 0.05d;
         public static final double EnergyDrainPerFeelerLengthPerSecond = 0.01d;
         public static final double EnergyDrainPerFeelerLengthExponent = 1d;
-        public static final double RotationRangePerSecond = 2 * Math.PI;
+        //! public static final double RotationRangePerSecond = 2 * Math.PI;
         public static final double MovingRangePerSecond = 120;
         public static final double MaxEatPortionPerSecond = 1200;
         public static final int CreatureSize = 8;
-        public static final int MinPopulationSize = 25;
-        public static final int InitialPopulationSize = 300;
+        //? public static final int MinPopulationSize = 25;
+        public static final int MinPopulationSize = 50;
+        public static final int InitialPopulationSize = 50;
+        //? public static final int InitialPopulationSize = 300;
         public static final double InitialFeelerLength = 8;
-        public static final double MinFeelerLength = 3;
-        public static final double MaxFeelerLength = 8;
-        public static final int BaseHiddenNeurons = 5;
+        public static final double MinFeelerLength = 8;
+        public static final double MaxFeelerLength = 12;
+        public static final int BaseHiddenNeurons = 7;
 
 
         public static class MutationRates{

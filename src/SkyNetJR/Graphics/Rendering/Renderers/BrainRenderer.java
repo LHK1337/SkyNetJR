@@ -19,11 +19,9 @@ public class BrainRenderer extends Renderer {
     private static final double SpacingY = NeuronRadius / 4;
 
     private NeuralNetwork _nn;
-    private boolean _b1;
 
-    public BrainRenderer(NeuralNetwork nn, boolean b1){
+    public BrainRenderer(NeuralNetwork nn){
         _nn = nn;
-        _b1 = b1;
     }
 
     @Override
@@ -40,28 +38,10 @@ public class BrainRenderer extends Renderer {
                 neuronActivities.get(neuronActivities.size() - 1)[j] = (double) _nn.getInputs()[j].getValue();
             }
 
-            if (_b1) {
-                neuronActivities.addAll(_nn.getHiddenNeuronActivities());
-            }
+            neuronActivities.addAll(_nn.getHiddenNeuronActivities());
 
             for (int i = 0; i < weights.size(); i++) {
                 double[][] layer = weights.get(i);
-
-                if (!_b1){
-                    neuronActivities.add(new double[layer.length]);
-
-                    for (int j = 0; j < neuronActivities.get(neuronActivities.size() - 1).length; j++) {
-                        for (int k = 0; k < neuronActivities.get(neuronActivities.size() - 2).length; k++) {
-                            neuronActivities.get(neuronActivities.size() - 1)[j] += neuronActivities.get(neuronActivities.size() - 2)[k] * layer[j][k];
-                        }
-
-//                      double x = neuronActivities.get(neuronActivities.size() - 1)[j];
-//                      double xx = NeuralNetwork.ActivationFunction(x);
-//                      neuronActivities.get(neuronActivities.size() - 1)[j] = xx;
-                        neuronActivities.get(neuronActivities.size() - 1)[j] = NeuralNetwork.ActivationFunction(neuronActivities.get(neuronActivities.size() - 1)[j]);
-                    }
-
-                }
 
                 // determine layer with most neurons
                 if (layer.length > maxNeuronCount)

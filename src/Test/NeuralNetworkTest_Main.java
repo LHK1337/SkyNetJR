@@ -11,7 +11,7 @@ public class NeuralNetworkTest_Main {
         WindowManager wm = new WindowManager();
         wm.Init();
 
-        View v = new View(1500, 920, "SkyNetJR::Test", true, wm);
+        View v = new View(960, 480, "SkyNetJR::Test", true, wm);
 
         Creature c = new Creature(0, 0, null);
         for (int i = 1; i < c.getBrain().getInputs().length; i++) {
@@ -19,18 +19,15 @@ public class NeuralNetworkTest_Main {
         }
 
         c.getBrain().AddHiddenLayer(8, false);
-        c.getBrain().AddHiddenLayer(7, false);
+        //c.getBrain().AddHiddenLayer(7, false);
         c.getBrain().AddHiddenLayer(13, false);
-        c.getBrain().AddHiddenLayer(9, false);
-        c.getBrain().AddHiddenLayer(10, true);
+        //c.getBrain().AddHiddenLayer(9, false);
+        //c.getBrain().AddHiddenLayer(10, true);
         c.getBrain().AddHiddenLayer(6, true);
 
         c.getBrain().EvaluateCpu();
 
-        v.getRenderers().add(new BrainRenderer(c.getBrain(), false));
-        v.getRenderers().add(new BrainRenderer(c.getBrain(), true));
-
-        v.getRenderers().get(v.getRenderers().size() - 1).setPositionY(460);
+        v.getRenderers().add(new BrainRenderer(c.getBrain()));
 
         v.Start();
 

@@ -46,18 +46,32 @@ public class Population {
 
         return _world.getTileMap().getTiles()[tileX][tileY];
     }
-    /*package-private*/ Creature getCollidingCreature(int positionX, int positionY) {
+
+    /*package-private*/ Creature getCollidingCreature(int gridX, int gridY) { return getCollidingCreature(gridX, gridY, null); }
+    /*package-private*/ Creature getCollidingCreature(int gridX, int gridY, Creature self) {
         if (
-                positionX < 0 || positionY < 0 ||
-                        positionX > _world.getTileMap().getWidth() * _world.getTileMap().getTileSize() ||
-                        positionY > _world.getTileMap().getHeight() * _world.getTileMap().getTileSize()
+                gridX < 0 || gridY < 0 ||
+                        gridX >= _world.getTileMap().getWidth() ||
+                        gridY >= _world.getTileMap().getHeight()
         )
             return null;
 
-        List cs = _collisionGrid[positionX / Settings.CreatureSettings.CreatureSize][positionY / Settings.CreatureSettings.CreatureSize];
+        List cs = _collisionGrid[gridX][gridY];
 
         if (cs == null || cs.size() == 0) return null;
         else {
+            if (self != null){
+                List<Creature> subCs = new ArrayList<Creature>();
+
+                for (Creature c: (List<Creature>)cs){
+                    if (c != self) subCs.add(c);
+                }
+
+                if (subCs.size() <= 0) return null;
+
+                cs = subCs;
+            }
+
             return (Creature) cs.get(new Random().nextInt(cs.size()));  // return random colliding creature
         }
     }
@@ -66,8 +80,8 @@ public class Population {
     public void setRealTime(boolean realTime) { this._realTime = realTime; }
     public void setRunning(boolean running) { _isRunning = running; }
     /*package-private*/ void UpdateCollisionGrid(Creature c, int x, int y) {
-        int gridX = x / Settings.CreatureSettings.CreatureSize;
-        int gridY = y / Settings.CreatureSettings.CreatureSize;
+        int gridX = x;
+        int gridY = y;
 
         if (gridX > 0 && gridY > 0 && gridX < _collisionGrid.length && gridY < _collisionGrid[gridX].length)
             //noinspection unchecked    <-- IntelliJ IDEA specific
@@ -93,8 +107,8 @@ public class Population {
         _world = world;
         _collisionGrid =
                 new List
-                        [(world.getTileMap().getWidth() * world.getTileMap().getTileSize() / Settings.CreatureSettings.CreatureSize) + 1]
-                        [(world.getTileMap().getHeight() * world.getTileMap().getTileSize() / Settings.CreatureSettings.CreatureSize) + 1];
+                        [world.getTileMap().getWidth()]
+                        [world.getTileMap().getHeight()];
         for (List[] lists : _collisionGrid) {
             Arrays.fill(lists, new ArrayList());
         }

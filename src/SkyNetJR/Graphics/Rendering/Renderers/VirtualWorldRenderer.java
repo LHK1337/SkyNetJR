@@ -17,6 +17,8 @@ public class VirtualWorldRenderer extends Renderer {
 
     @Override
     public void Render(int offsetX, int offsetY) {
+        if (!world.getDraw()) return;
+
         TileMap map = world.getTileMap();
 
         GL11.glColor3d(Settings.WorldSettings.WaterColor.x, Settings.WorldSettings.WaterColor.y, Settings.WorldSettings.WaterColor.z);

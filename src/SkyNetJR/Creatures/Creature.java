@@ -6,6 +6,7 @@ import SkyNetJR.AI.NeuralPropertyType;
 import SkyNetJR.Settings;
 import SkyNetJR.VirtualWorld.Tile;
 import SkyNetJR.VirtualWorld.TileType;
+import SkyNetJR.VirtualWorld.VirtualWorld;
 import org.joml.Vector3d;
 
 import java.util.ArrayList;
@@ -13,19 +14,26 @@ import java.util.List;
 import java.util.Random;
 
 public class Creature {
+    private double Energy;
+    private double Age;
+    private double EnergyOnCurrentTile;
+    private boolean CurrentTileWater;
+    private boolean WasAttacked;
+    private boolean WasHealed;
+
     // Sensing
-    private NeuralProperty<Double> Energy;
-    private NeuralProperty<Double> Age;
-    private NeuralProperty<Double> EnergyOnCurrentTile;
-    private NeuralProperty<Double> CurrentTileWater;
-    private NeuralProperty<Double> WasAttacked;
-    private NeuralProperty<Double> WasHealed;
+    private NeuralProperty<Double> NeuralInEnergy;
+    private NeuralProperty<Double> NeuralInAge;
+    private NeuralProperty<Double> NeuralInEnergyOnCurrentTile;
+    private NeuralProperty<Double> NeuralInCurrentTileWater;
+    private NeuralProperty<Double> NeuralInWasAttacked;
+    private NeuralProperty<Double> NeuralInWasHealed;
 
     // Acting
-    private NeuralProperty<Double> RotationChange;
-    private NeuralProperty<Double> Forward;
-    private NeuralProperty<Double> Eat;
-    private NeuralProperty<Double> Replicate;
+    private NeuralProperty<Double> NeuralOutRotation;
+    private NeuralProperty<Double> NeuralOutForward;
+    private NeuralProperty<Double> NeuralOutEat;
+    private NeuralProperty<Double> NeuralOutReplicate;
 
     private List<Feeler> Feelers;
 
@@ -44,6 +52,15 @@ public class Creature {
 
     private boolean destroyed;
     private boolean inhibit;
+
+    private boolean _draw;
+
+    public boolean getDraw(){
+        return _draw;
+    }
+    public void setDraw(boolean value){
+        _draw = value;
+    }
 
     public Creature(double positionX, double positionY, Population population){
         this(positionX, positionY, 0, population);
@@ -79,7 +96,7 @@ public class Creature {
     }
 
     private void InheritFromParent(Creature parent){
-        Energy.setValue(Settings.CreatureSettings.EnergyDrainPerReplication);
+        Energy = Settings.CreatureSettings.EnergyDrainPerReplication;
         PositionX = parent.PositionX;
         PositionY = parent.PositionY;
 
@@ -96,30 +113,30 @@ public class Creature {
         NeuralProperty[] ins = parent.getBrain().getInputs();
         for (NeuralProperty in : ins) {
             switch (in.getType()) { case Bias: break;
-                case EnergySelf: brain.AddInput(Energy, false);break;
-                case Age: brain.AddInput(Age, false);break;
-                case EnergyOnCurrentTile: brain.AddInput(EnergyOnCurrentTile, false);break;
-                case CurrentTileWater: brain.AddInput(CurrentTileWater, false);break;
-                case WasAttacked: brain.AddInput(WasAttacked, false);break;
-                case WasHealed: brain.AddInput(WasHealed, false);break;
+                case EnergySelf: brain.AddInput(NeuralInEnergy, false);break;
+                case Age: brain.AddInput(NeuralInAge, false);break;
+                case EnergyOnCurrentTile: brain.AddInput(NeuralInEnergyOnCurrentTile, false);break;
+                case CurrentTileWater: brain.AddInput(NeuralInCurrentTileWater, false);break;
+                case WasAttacked: brain.AddInput(NeuralInWasAttacked, false);break;
+                case WasHealed: brain.AddInput(NeuralInWasHealed, false);break;
 
                 // Feelers
-                case FeelsWater: brain.AddInput(Feelers.get(in.getTag()).FeelsWater, false);break;
-                case EnergyValueFeeler: brain.AddInput(Feelers.get(in.getTag()).EnergyValueFeeler, false);break;
-                case FeelsCreature: brain.AddInput(Feelers.get(in.getTag()).FeelsCreature, false);break;
-                case GeneticDifference: brain.AddInput(Feelers.get(in.getTag()).GeneticDifference, false);break;
-                case OtherCreatureAge: brain.AddInput(Feelers.get(in.getTag()).OtherCreatureAge, false);break;
-                case OtherCreatureEnergy: brain.AddInput(Feelers.get(in.getTag()).OtherCreatureEnergy, false);break;
+                case FeelsWater: brain.AddInput(Feelers.get(in.getTag()).NeuralInFeelsWater, false);break;
+                case EnergyValueFeeler: brain.AddInput(Feelers.get(in.getTag()).NeuralInEnergyValueFeeler, false);break;
+                case FeelsCreature: brain.AddInput(Feelers.get(in.getTag()).NeuralInFeelsCreature, false);break;
+                case GeneticDifference: brain.AddInput(Feelers.get(in.getTag()).NeuralInGeneticDifference, false);break;
+                case OtherCreatureAge: brain.AddInput(Feelers.get(in.getTag()).NeuralInOtherCreatureAge, false);break;
+                case OtherCreatureEnergy: brain.AddInput(Feelers.get(in.getTag()).NeuralInOtherCreatureEnergy, false);break;
             }
         }
 
         NeuralProperty[] outs = parent.getBrain().getOutputs();
         for (NeuralProperty out : outs) {
             switch (out.getType()) {
-                case Rotate: brain.AddOutput(RotationChange, false); break;
-                case Forward: brain.AddOutput(Forward, false); break;
-                case Eat: brain.AddOutput(Eat, false); break;
-                case Replicate: brain.AddOutput(Replicate, false); break;
+                case Rotate: brain.AddOutput(NeuralOutRotation, false); break;
+                case Forward: brain.AddOutput(NeuralOutForward, false); break;
+                case Eat: brain.AddOutput(NeuralOutEat, false); break;
+                case Replicate: brain.AddOutput(NeuralOutReplicate, false); break;
 
                 //Feelers
                 case FeelerAngle: brain.AddOutput(Feelers.get(out.getTag()).Angle, false); break;
@@ -135,36 +152,45 @@ public class Creature {
 
         brain.AddHiddenLayer(Settings.CreatureSettings.BaseHiddenNeurons, false);
 
-        brain.AddInput(Energy, false);
-        brain.AddInput(Age, false);
+        brain.AddInput(NeuralInEnergy, false);
+        brain.AddInput(NeuralInAge, false);
         if (Settings.CreatureSettings.CanFeelOnBody)
         {
-            brain.AddInput(EnergyOnCurrentTile, false);
-            brain.AddInput(CurrentTileWater, false);
+            brain.AddInput(NeuralInEnergyOnCurrentTile, false);
+            brain.AddInput(NeuralInCurrentTileWater, false);
         }
-        brain.AddInput(WasAttacked, false);
-        brain.AddInput(WasHealed, false);
+        brain.AddInput(NeuralInWasAttacked, false);
+        brain.AddInput(NeuralInWasHealed, false);
 
-        brain.AddOutput(RotationChange, false);
-        brain.AddOutput(Forward, false);
-        brain.AddOutput(Eat, false);
+        brain.AddOutput(NeuralOutRotation, false);
+        brain.AddOutput(NeuralOutForward, false);
+        brain.AddOutput(NeuralOutEat, false);
 
         // one add to trigger net rebuild;
-        brain.AddOutput(Replicate, true);
+        brain.AddOutput(NeuralOutReplicate, true);
     }
 
     private void SetDefaults(){
-        Energy = new NeuralProperty<Double>(Settings.CreatureSettings.BaseEnergy, NeuralPropertyType.EnergySelf);
-        Age = new NeuralProperty<Double>(0d, NeuralPropertyType.Age);
-        EnergyOnCurrentTile = new NeuralProperty<>(NeuralPropertyType.EnergyOnCurrentTile);
-        CurrentTileWater = new NeuralProperty<>(NeuralPropertyType.CurrentTileWater);
-        WasAttacked = new NeuralProperty<>(NeuralPropertyType.WasAttacked);
-        WasHealed = new NeuralProperty<>(NeuralPropertyType.WasHealed);
+        _draw = true;
 
-        RotationChange = new NeuralProperty<>(NeuralPropertyType.Rotate);
-        Forward = new NeuralProperty<>(NeuralPropertyType.Forward);
-        Eat = new NeuralProperty<>(NeuralPropertyType.Eat);
-        Replicate = new NeuralProperty<>(NeuralPropertyType.Replicate);
+        Energy = Settings.CreatureSettings.BaseEnergy;
+        Age = 0d;
+        EnergyOnCurrentTile = 0d;
+        CurrentTileWater = false;
+        WasAttacked = false;
+        WasHealed = false;
+
+        NeuralInEnergy = new NeuralProperty<Double>(Settings.CreatureSettings.BaseEnergy, NeuralPropertyType.EnergySelf);
+        NeuralInAge = new NeuralProperty<Double>(0d, NeuralPropertyType.Age);
+        NeuralInEnergyOnCurrentTile = new NeuralProperty<>(NeuralPropertyType.EnergyOnCurrentTile);
+        NeuralInCurrentTileWater = new NeuralProperty<>(NeuralPropertyType.CurrentTileWater);
+        NeuralInWasAttacked = new NeuralProperty<>(NeuralPropertyType.WasAttacked);
+        NeuralInWasHealed = new NeuralProperty<>(NeuralPropertyType.WasHealed);
+
+        NeuralOutRotation = new NeuralProperty<>(NeuralPropertyType.Rotate);
+        NeuralOutForward = new NeuralProperty<>(NeuralPropertyType.Forward);
+        NeuralOutEat = new NeuralProperty<>(NeuralPropertyType.Eat);
+        NeuralOutReplicate = new NeuralProperty<>(NeuralPropertyType.Replicate);
 
         Feelers = new ArrayList<>();
 
@@ -235,12 +261,12 @@ public class Creature {
     }
 
     private void LinkFeeler(Feeler f){
-        brain.AddInput(f.FeelsWater, false);
-        brain.AddInput(f.EnergyValueFeeler, false);
-        brain.AddInput(f.FeelsCreature, false);
-        brain.AddInput(f.GeneticDifference, false);
-        brain.AddInput(f.OtherCreatureAge, false);
-        brain.AddInput(f.OtherCreatureEnergy, false);
+        brain.AddInput(f.NeuralInFeelsWater, false);
+        brain.AddInput(f.NeuralInEnergyValueFeeler, false);
+        brain.AddInput(f.NeuralInFeelsCreature, false);
+        brain.AddInput(f.NeuralInGeneticDifference, false);
+        brain.AddInput(f.NeuralInOtherCreatureAge, false);
+        brain.AddInput(f.NeuralInOtherCreatureEnergy, false);
         brain.AddOutput(f.Angle, false);
         brain.AddOutput(f.Length, false);
         brain.AddOutput(f.Attack, false);
@@ -251,12 +277,12 @@ public class Creature {
         Feeler f = Feelers.get(Feelers.size() - 1);
         Feelers.remove(f);
 
-        brain.RemoveInput(f.FeelsWater, false);
-        brain.RemoveInput(f.EnergyValueFeeler, false);
-        brain.RemoveInput(f.FeelsCreature, false);
-        brain.RemoveInput(f.GeneticDifference, false);
-        brain.RemoveInput(f.OtherCreatureAge, false);
-        brain.RemoveInput(f.OtherCreatureEnergy, false);
+        brain.RemoveInput(f.NeuralInFeelsWater, false);
+        brain.RemoveInput(f.NeuralInEnergyValueFeeler, false);
+        brain.RemoveInput(f.NeuralInFeelsCreature, false);
+        brain.RemoveInput(f.NeuralInGeneticDifference, false);
+        brain.RemoveInput(f.NeuralInOtherCreatureAge, false);
+        brain.RemoveInput(f.NeuralInOtherCreatureEnergy, false);
         brain.RemoveOutput(f.Angle, false);
         brain.RemoveOutput(f.Length, false);
         brain.RemoveOutput(f.Attack, false);
@@ -264,57 +290,82 @@ public class Creature {
     }
 
     public void Sense(){
-        // Energy - as it is
-        // Age - as it is
+        // Energy
+        NeuralInEnergy.setValue(Energy / Settings.CreatureSettings.BaseEnergy);
+
+        // Age
+        NeuralInAge.setValue(Age / 10);
 
         Tile t = Population.getTile((int)PositionX, (int)PositionY);
 
         // EnergyOnCurrentTile
-        EnergyOnCurrentTile.setValue(t.Energy);
+        EnergyOnCurrentTile = t.Energy;
+        NeuralInEnergyOnCurrentTile.setValue(EnergyOnCurrentTile / Settings.SimulationSettings.MaxEnergyPerTile);
 
         // CurrentTileWater
-        CurrentTileWater.setValue((t.getType() == TileType.Water ? 1d : 0d));
+        CurrentTileWater = t.getType() == TileType.Water;
+        NeuralInCurrentTileWater.setValue((CurrentTileWater ? 1d : 0d));
 
         // TODO WasAttacked
-        WasAttacked.setValue(0d);
+        WasAttacked = false;
+        NeuralInWasAttacked.setValue((WasAttacked ? 1d : 0d));
 
         // TODO WasHealed
-        WasHealed.setValue(0d);
+        WasHealed = false;
+        NeuralInWasHealed.setValue((WasHealed ? 1d : 0d));
 
         // Feeler
         for (Feeler feeler : Feelers) {
+
+            //TODO FIX Collision, feelsOn, etc
+
             int feelsOnX = (int) (Math.round(PositionX + Math.cos(feeler.Angle.getValue()) / feeler.Length.getValue()));
             int feelsOnY = (int) (Math.round(PositionY + Math.sin(feeler.Angle.getValue()) / feeler.Length.getValue()));
 
             t = Population.getTile(feelsOnX, feelsOnY);
 
             // Feeler.FeelsWater
-            feeler.FeelsWater.setValue((t.getType() == TileType.Water ? 1d : 0d));
+            feeler.NeuralInFeelsWater.setValue((t.getType() == TileType.Water ? 1d : 0d));
 
             // Feeler.EnergyValueFeeler
-            feeler.EnergyValueFeeler.setValue(t.Energy);
+            feeler.NeuralInEnergyValueFeeler.setValue(t.Energy / Settings.SimulationSettings.MaxEnergyPerTile);
 
-            Creature c = Population.getCollidingCreature(feelsOnX, feelsOnY);
+            Creature c = Population.getCollidingCreature(t.X, t.Y, this);
 
             // Feeler.FeelsCreature
-            feeler.FeelsCreature.setValue((c == null ? 0d : 1d));
+            feeler.NeuralInFeelsCreature.setValue((c == null ? 0d : 1d));
 
             // Feeler.GeneticDifference
-            if (c != null)
+            if (c != null && c != this)
             {
+                VirtualWorld.Current.setDraw(false);
+
+                for (Creature creature: Population.getCreatures())
+                    if (creature != this && creature != c)
+                        creature._draw = false;
+
+                System.out.println("[Detected Collision]");
+                try {
+                    Thread.sleep(10000000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+                final double MaxGeneticDifference = Math.sqrt(3);
+
                 Vector3d otherGenetics = c.getGenetics();
                 double difference = Vector3d.distance
                         (this.Genetics.x, this.Genetics.y, this.Genetics.z,
                          otherGenetics.x, otherGenetics.y, otherGenetics.z);
 
-                feeler.GeneticDifference.setValue(difference);
-            } else feeler.GeneticDifference.setValue(0d);
+                feeler.NeuralInGeneticDifference.setValue(difference / MaxGeneticDifference);
+            } else feeler.NeuralInGeneticDifference.setValue(0d);
 
             // Feeler.OtherCreatureAge
-            feeler.OtherCreatureAge.setValue(c != null ? c.Age.getValue() : 0d);
+            feeler.NeuralInOtherCreatureAge.setValue(c != null ? c.Age / 10 : 0d);
 
             // Feeler.OtherCreatureEnergy
-            feeler.OtherCreatureEnergy.setValue(c != null ? c.Energy.getValue() : 0d);
+            feeler.NeuralInOtherCreatureEnergy.setValue(c != null ? c.Energy / Settings.CreatureSettings.BaseEnergy : 0d);
         }
     }
 
@@ -325,27 +376,27 @@ public class Creature {
         }
 
         // Age
-        Age.setValue(Age.getValue() + (deltaTime / 1000));
+        Age += ((deltaTime / 1000));
 
         // Constant Energy Cost
-        Energy.setValue(Energy.getValue() - (Settings.CreatureSettings.EnergyDrainPerSecond * deltaTime / 1000));
-        Energy.setValue(Energy.getValue() - (Settings.CreatureSettings.AgeEnergyDrainPerSecond * SpecificAgingFactor * Age.getValue() * deltaTime / 1000));
-        if (CurrentTileWater.getValue() > 0)
-            Energy.setValue(Energy.getValue() - (Settings.CreatureSettings.EnergyDrainOnWaterPerSecond * deltaTime / 1000));
+        Energy -= (Settings.CreatureSettings.EnergyDrainPerSecond * deltaTime / 1000);
+        Energy -= (Settings.CreatureSettings.AgeEnergyDrainPerSecond * SpecificAgingFactor * Age * deltaTime / 1000);
+        if (CurrentTileWater)
+            Energy -= (Settings.CreatureSettings.EnergyDrainOnWaterPerSecond * deltaTime / 1000);
 
         // Eat
-        // Todo: Test case when Eat < 0
-        Energy.setValue(Energy.getValue() + Population.Eat((int)PositionX, (int)PositionY, Eat.getValue() * Settings.CreatureSettings.MaxEatPortionPerSecond * deltaTime / 1000));
+        Energy += Population.Eat((int)PositionX, (int)PositionY, NeuralOutEat.getValue() * Settings.CreatureSettings.MaxEatPortionPerSecond * deltaTime / 1000);
 
         // Rotation
-        Rotation += RotationChange.getValue() * Settings.CreatureSettings.RotationRangePerSecond * deltaTime / 1000;
+        //Rotation += NeuralOutRotation.getValue() * Settings.CreatureSettings.RotationRangePerSecond * deltaTime / 1000;
+        Rotation = NeuralOutRotation.getValue() * 2 * Math.PI;
 
         // Forward
         double move = Settings.CreatureSettings.MovingRangePerSecond * deltaTime / 1000;
-        Energy.setValue(Energy.getValue() - (Settings.CreatureSettings.MovingEnergyDrainPerPixel * Math.abs(Forward.getValue()) * move));
+        Energy -=  (Settings.CreatureSettings.MovingEnergyDrainPerPixel * Math.abs(NeuralOutForward.getValue()) * move);
 
-        double moveX = Math.cos(Rotation) * (Forward.getValue() * move);
-        double moveY = Math.sin(Rotation) * (Forward.getValue() * move);
+        double moveX = Math.cos(NeuralOutRotation.getValue()) * (NeuralOutForward.getValue() * move);
+        double moveY = Math.sin(NeuralOutRotation.getValue()) * (NeuralOutForward.getValue() * move);
 
         PositionX += moveX;
         PositionY += moveY;
@@ -353,35 +404,33 @@ public class Creature {
         Population.UpdateCollisionGrid(this, (int) PositionX, (int) PositionY);
 
         // Replication
-        if (Age.getValue() >= Settings.CreatureSettings.ReplicationMinAge){
-            if (Replicate.getValue() > 0){
-                Energy.setValue(Energy.getValue() - Settings.CreatureSettings.EnergyDrainPerReplication);
+        if (Age >= Settings.CreatureSettings.ReplicationMinAge){
+            if (NeuralOutReplicate.getValue() > 0){
+                Energy -= Settings.CreatureSettings.EnergyDrainPerReplication;
 
-                if (Energy.getValue() > 0)
+                if (Energy > 0)
                     Replicate();
             }
         }
 
         // Feeler
-        Energy.setValue(Energy.getValue() - (Settings.CreatureSettings.EnergyDrainPerFeelerPerSecond * Feelers.size() * deltaTime / 1000));
+        Energy -= (Settings.CreatureSettings.EnergyDrainPerFeelerPerSecond * Feelers.size() * deltaTime / 1000);
 
         for (Feeler f : Feelers){
             // Feeler.Angle
-            f.Angle.setValue(f.Angle.getValue() * 2 * Math.PI + Rotation);
+            f.Angle.setValue(f.Angle.getValue() * 2 * Math.PI + NeuralOutRotation.getValue());
 
             // Feeler.Length
             f.Length.setValue(f.Length.getValue() * Settings.CreatureSettings.MaxFeelerLength);
             if (f.Length.getValue() < Settings.CreatureSettings.MinFeelerLength)
                 f.Length.setValue(Settings.CreatureSettings.MinFeelerLength);
 
-            Energy.setValue(
-                    Energy.getValue() -
-                            (Settings.CreatureSettings.EnergyDrainPerFeelerLengthPerSecond *
-                             Math.pow(f.Length.getValue() - Settings.CreatureSettings.MinFeelerLength,
-                                     Settings.CreatureSettings.EnergyDrainPerFeelerLengthExponent) * deltaTime / 1000));
+            Energy -= (Settings.CreatureSettings.EnergyDrainPerFeelerLengthPerSecond *
+                        Math.pow(f.Length.getValue() - Settings.CreatureSettings.MinFeelerLength,
+                                Settings.CreatureSettings.EnergyDrainPerFeelerLengthExponent) * deltaTime / 1000);
         }
 
-        if (Energy.getValue() <= 0)
+        if (Energy <= 0)
             Destroy();
     }
 
@@ -400,11 +449,11 @@ public class Creature {
 
     public NeuralNetwork getBrain() { return brain; }
 
-    public double getRotationChange(){
-        return RotationChange.getValue();
+    public double getRotation(){
+        return Rotation;
     }
-    public void setRotationChange(double value){
-        RotationChange.setValue(value);
+    public void setRotation(double value){
+        Rotation = value;
     }
 
     public double getPositionY(){
@@ -434,17 +483,17 @@ public class Creature {
     }
 
     public double getEnergy(){
-        return Energy.getValue();
+        return Energy;
     }
     public void setEnergy(double value){
-        Energy.setValue(value);
+        Energy = value;
     }
 
     public double getAge() {
-        return Age.getValue();
+        return Age;
     }
     public void setAge(double age) {
-        Age.setValue(age);
+        Age = age;
     }
 
     public long getGeneration() {

@@ -1,6 +1,17 @@
 package SkyNetJR.VirtualWorld;
 
 public class VirtualWorld {
+    public static VirtualWorld Current;
+
+    private boolean _draw;
+
+    public boolean getDraw(){
+        return _draw;
+    }
+    public void setDraw(boolean value){
+        _draw = value;
+    }
+
     private TileMap _tileMap;
 
     private long _lastSimulationTime;
@@ -19,8 +30,11 @@ public class VirtualWorld {
 
 
     public VirtualWorld(TileMap tileMap) {
+        Current = this;
+
         this._tileMap = tileMap;
 
+        _draw = true;
         _isRunning = false;
         _realTime = true;
     }
