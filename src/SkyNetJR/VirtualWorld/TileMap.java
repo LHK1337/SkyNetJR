@@ -13,6 +13,7 @@ public class TileMap {
     private double _maxEnergyPerTile;
     private double _baseEnergyGeneration;
     private Tile[][] _tiles;
+    private int _totalLandTiles;
 
     private Random random;
 
@@ -90,6 +91,7 @@ public class TileMap {
         _generationInfo = GenerationInfo.GetDefaults();
         _maxEnergyPerTile = Settings.SimulationSettings.MaxEnergyPerTile;
         _baseEnergyGeneration = Settings.SimulationSettings.BaseEnergyGeneration;
+        _totalLandTiles = 0;
     }
 
     public void Generate() {
@@ -103,6 +105,7 @@ public class TileMap {
             for (int x = 0; x < _width; x++) {
                 for (int y = 0; y < _height; y++) {
                     _tiles[x][y] = new Tile(Settings.SimulationSettings.StartEnergy, heightMap[x][y] <= _generationInfo.LandThreshold ? TileType.Land : TileType.Water, x, y);
+                    if (_tiles[x][y].getType() == TileType.Land) _totalLandTiles++;
                 }
             }
         }
@@ -178,5 +181,9 @@ public class TileMap {
 
     public void setBaseEnergyGeneration(double baseEnergyGeneration) {
         _baseEnergyGeneration = baseEnergyGeneration;
+    }
+
+    public int getTotalLandTiles() {
+        return _totalLandTiles;
     }
 }

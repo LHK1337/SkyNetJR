@@ -2,18 +2,20 @@ package SkyNetJR.Creatures;
 
 import SkyNetJR.Settings;
 import SkyNetJR.VirtualWorld.Tile;
+import SkyNetJR.VirtualWorld.TileMap;
 import SkyNetJR.VirtualWorld.TileType;
 import SkyNetJR.VirtualWorld.VirtualWorld;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+import java.util.Stack;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
 public class Population {
     private VirtualWorld _world;
-
-    private List[][] _collisionGrid;
 
     private final Object _creatureLock = new Object();
     private List<Creature> _creatures;
@@ -47,46 +49,10 @@ public class Population {
         return _world.getTileMap().getTiles()[tileX][tileY];
     }
 
-    /*package-private*/ Creature getCollidingCreature(int gridX, int gridY) { return getCollidingCreature(gridX, gridY, null); }
-    /*package-private*/ Creature getCollidingCreature(int gridX, int gridY, Creature self) {
-        if (
-                gridX < 0 || gridY < 0 ||
-                        gridX >= _world.getTileMap().getWidth() ||
-                        gridY >= _world.getTileMap().getHeight()
-        )
-            return null;
-
-        List cs = _collisionGrid[gridX][gridY];
-
-        if (cs == null || cs.size() == 0) return null;
-        else {
-            if (self != null){
-                List<Creature> subCs = new ArrayList<Creature>();
-
-                for (Creature c: (List<Creature>)cs){
-                    if (c != self) subCs.add(c);
-                }
-
-                if (subCs.size() <= 0) return null;
-
-                cs = subCs;
-            }
-
-            return (Creature) cs.get(new Random().nextInt(cs.size()));  // return random colliding creature
-        }
-    }
-
     public void setLastSimulationTime(long time){ _lastSimulationTime = time; }
     public void setRealTime(boolean realTime) { this._realTime = realTime; }
     public void setRunning(boolean running) { _isRunning = running; }
-    /*package-private*/ void UpdateCollisionGrid(Creature c, int x, int y) {
-        int gridX = x;
-        int gridY = y;
 
-        if (gridX > 0 && gridY > 0 && gridX < _collisionGrid.length && gridY < _collisionGrid[gridX].length)
-            //noinspection unchecked    <-- IntelliJ IDEA specific
-            _collisionGrid[gridX][gridY].add(c);
-    }
     /*package-private*/ double Eat(int positionX, int positionY, double value) {
         Tile t = getTile(positionX, positionY);
 
@@ -105,26 +71,21 @@ public class Population {
         this();
 
         _world = world;
-        _collisionGrid =
-                new List
-                        [world.getTileMap().getWidth()]
-                        [world.getTileMap().getHeight()];
-        for (List[] lists : _collisionGrid) {
-            Arrays.fill(lists, new ArrayList());
-        }
     }
 
     public void FillPopulation() {
         Random r = new Random();
 
-        int count = Settings.CreatureSettings.InitialPopulationSize - _creatures.size();
+        TileMap map = _world.getTileMap();
+        double pSpawnCreature = (Settings.CreatureSettings.InitialPopulationSizeTarget - _creatures.size()) / (double)map.getTotalLandTiles();
 
-        for (int i = 0; i < count; i++) {
-            AddCreature(new Creature(
-                    r.nextInt(_world.getTileMap().getWidth()) * _world.getTileMap().getTileSize() + Settings.CreatureSettings.CreatureSize / 2,
-                    r.nextInt(_world.getTileMap().getHeight()) * _world.getTileMap().getTileSize() + Settings.CreatureSettings.CreatureSize / 2,
-                    this));
-        }
+        for (Tile[] tt : map.getTiles())
+            for (Tile t : tt){
+                if (t.getType() == TileType.Land && r.nextDouble() <= pSpawnCreature)
+                    AddCreature(new Creature(t.X * map.getTileSize() + map.getTileSize() / 2d,
+                                             t.Y * map.getTileSize() + map.getTileSize() / 2d,
+                                            this));
+            }
     }
 
     public void RemoveCreature(Creature creature) {
@@ -169,8 +130,6 @@ public class Population {
             }
         }
 
-        ClearCollisionGrid();
-
         for (int i = 0; i < _creatures.size(); i++) {
             Creature c = _creatures.get(i);
             c.Act(deltaTime);           // react on environment
@@ -180,11 +139,5 @@ public class Population {
         // create new Creation when Population is too small
         if (_creatures.size() < Settings.CreatureSettings.MinPopulationSize)
             FillPopulation();
-    }
-
-    private void ClearCollisionGrid() {
-        for (List[] lists : _collisionGrid)
-            for (List list : lists)
-                list.clear();
     }
 }

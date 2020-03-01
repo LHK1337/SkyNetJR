@@ -12,10 +12,9 @@ public class NeuralNetwork {
     private List<Integer> HiddenLayerNeurons;
     private List<double[]> HiddenNeuronActivities;
 
-    // Weight matrix: [inputCount][outputCounts]
 
     private final Object WeightsLock = new Object();
-    private List<double[][]> Weights;
+    private List<double[][]> Weights;   // Weight matrix: [outputCounts][inputCount]
 
     private NeuralProperty<Double> bias;
 
@@ -43,6 +42,8 @@ public class NeuralNetwork {
             for (int i = 0; i < nn.Weights.size(); i++) {
                 Weights.add(nn.Weights.get(i).clone());
             }
+
+            this.HiddenLayerNeurons.addAll(nn.HiddenLayerNeurons);
         }
     }
 
@@ -58,11 +59,8 @@ public class NeuralNetwork {
     }
 
     public static double ActivationFunction(double x){
-        //return Sigmoid(x);
         return TangentHyperbolic(x);
     }
-    
-    private static double Sigmoid(double x) { return ((2/(1 + Math.pow(Math.E,(-1*x)))) - 1); }
 
     private static double TangentHyperbolic(double x){ return Math.tanh(x); }
 
@@ -96,10 +94,6 @@ public class NeuralNetwork {
         for (int j = 0; j < Outputs.size(); j++) {
             Outputs.get(j).setValue(v[j][0]);
         }
-    }
-
-    public void EvaluateGpu() {
-        if (Destroyed) return;
     }
 
     public void Mutate(double mutationRate){

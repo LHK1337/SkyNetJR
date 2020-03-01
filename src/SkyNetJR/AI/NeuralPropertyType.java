@@ -8,16 +8,10 @@ public enum NeuralPropertyType {
     Age,
     EnergyOnCurrentTile,
     CurrentTileWater,
-    WasAttacked,
-    WasHealed,
 
     //Feeler
     FeelsWater,
     EnergyValueFeeler,
-    FeelsCreature,
-    GeneticDifference,
-    OtherCreatureAge,
-    OtherCreatureEnergy,
 
 
     //* Outputs

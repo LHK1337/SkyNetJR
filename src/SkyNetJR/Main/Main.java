@@ -32,6 +32,7 @@ public class Main {
         map.Generate();
         World = new VirtualWorld(map);
         World.setRunning(true);
+        World.setDraw(true);
 
         WorldView.getRenderers().add(new VirtualWorldRenderer(World));
 
