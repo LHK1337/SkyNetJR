@@ -1,4 +1,4 @@
-package Test;
+package SkyNetJR.Test;
 
 import FX.FxController;
 import SkyNetJR.Creatures.Creature;
@@ -11,7 +11,7 @@ public class NeuralNetworkTest_Main {
         WindowManager wm = new WindowManager();
         wm.Init();
 
-        View v = new View(960, 480, "SkyNetJR::Test", true, wm);
+        View v = new View(960, 480, "SkyNetJR::SkyNetJR.Test", true, wm);
 
         Creature c = new Creature(0, 0, null);
         for (int i = 1; i < c.getBrain().getInputs().length; i++) {
