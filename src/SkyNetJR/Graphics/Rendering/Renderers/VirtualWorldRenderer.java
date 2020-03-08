@@ -35,9 +35,9 @@ public class VirtualWorldRenderer extends Renderer {
             for (int y = 0; y < t[x].length; y++) {
 
                 if (t[x][y].getType() != TileType.Water) {
-                    GL11.glColor3d(Settings.WorldSettings.MaxEnergyColor.x * (t[x][y].Energy / map.getMaxEnergyPerTile()),
-                            Settings.WorldSettings.MaxEnergyColor.y * (t[x][y].Energy / map.getMaxEnergyPerTile()),
-                            Settings.WorldSettings.MaxEnergyColor.z * (t[x][y].Energy / map.getMaxEnergyPerTile()));
+                    GL11.glColor3d(Settings.WorldSettings.MaxEnergyColor.x * (t[x][y].Energy / Settings.SimulationSettings.MaxEnergyPerTile),
+                            Settings.WorldSettings.MaxEnergyColor.y * (t[x][y].Energy / Settings.SimulationSettings.MaxEnergyPerTile),
+                            Settings.WorldSettings.MaxEnergyColor.z * (t[x][y].Energy / Settings.SimulationSettings.MaxEnergyPerTile));
 
                     TileType[] n = TileMap.GetNeighbourTypes(t, x, y);
 

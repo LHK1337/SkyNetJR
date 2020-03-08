@@ -106,7 +106,7 @@ public class WindowThread extends DestroyableThread {
                 glfwSwapInterval(useVSync ? 1 : 0);
             }
 
-            //glClear(GL_COLOR_BUFFER_BIT);
+            glClear(GL_COLOR_BUFFER_BIT);
 
             try {
                 for (Renderer renderer : view.getRenderers()) {

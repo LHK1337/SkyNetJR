@@ -4,10 +4,13 @@ import SkyNetJR.AI.NeuralNetwork;
 import SkyNetJR.AI.NeuralProperty;
 import SkyNetJR.AI.NeuralPropertyType;
 import SkyNetJR.Settings;
+import SkyNetJR.Util;
 import SkyNetJR.VirtualWorld.Tile;
 import SkyNetJR.VirtualWorld.TileType;
 import org.joml.Vector3d;
 
+import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -35,7 +38,7 @@ public class Creature {
 
     private double SpecificAgingFactor;
 
-    private final long Generation;
+    private long Generation;
     private double PositionX;
     private double PositionY;
     private double Rotation;
@@ -55,6 +58,8 @@ public class Creature {
     public void setDraw(boolean value){
         _draw = value;
     }
+
+    private Creature() { }
 
     public Creature(double positionX, double positionY, Population population){
         this(positionX, positionY, 0, population);
@@ -103,8 +108,12 @@ public class Creature {
         }
 
         brain = new NeuralNetwork(parent.brain);
-
         NeuralProperty[] ins = parent.getBrain().getInputs();
+        NeuralProperty[] outs = parent.getBrain().getOutputs();
+        LinkBrainFromParent(ins, outs);
+    }
+
+    private void LinkBrainFromParent(NeuralProperty[] ins, NeuralProperty[] outs){
         for (NeuralProperty in : ins) {
             switch (in.getType()) { case Bias: break;
                 case EnergySelf: brain.AddInput(NeuralInEnergy, false);break;
@@ -118,7 +127,6 @@ public class Creature {
             }
         }
 
-        NeuralProperty[] outs = parent.getBrain().getOutputs();
         for (NeuralProperty out : outs) {
             switch (out.getType()) {
                 case Rotate: brain.AddOutput(NeuralOutRotation, false); break;
@@ -129,8 +137,6 @@ public class Creature {
                 //Feelers
                 case FeelerAngle: brain.AddOutput(Feelers.get(out.getTag()).Angle, false); break;
                 case FeelerLength: brain.AddOutput(Feelers.get(out.getTag()).Length, false); break;
-                case Attack: brain.AddOutput(Feelers.get(out.getTag()).Attack, false); break;
-                case Heal: brain.AddOutput(Feelers.get(out.getTag()).Heal, false); break;
             }
         }
     }
@@ -139,7 +145,7 @@ public class Creature {
         brain = new NeuralNetwork();
 
         for (int i = 0; i < Settings.CreatureSettings.BaseHiddenNeuronLayers; i++) {
-            brain.AddHiddenLayer(Settings.CreatureSettings.BaseHiddenNeurons, false);
+            brain.AddHiddenLayer(new Random().nextInt(Settings.CreatureSettings.MutationRates.MaxHiddenNeuronsPerLayer - Settings.CreatureSettings.MutationRates.MinHiddenNeuronsPerLayer) + Settings.CreatureSettings.MutationRates.MinHiddenNeuronsPerLayer, false);
         }
 
         brain.AddInput(NeuralInEnergy, false);
@@ -165,11 +171,14 @@ public class Creature {
         Age = 0d;
         EnergyOnCurrentTile = 0d;
         CurrentTileWater = false;
+        Rotation = new Random().nextDouble() * 2 * Math.PI;
 
-        NeuralInEnergy = new NeuralProperty<Double>(Settings.CreatureSettings.BaseEnergy, NeuralPropertyType.EnergySelf);
-        NeuralInAge = new NeuralProperty<Double>(0d, NeuralPropertyType.Age);
-        NeuralInEnergyOnCurrentTile = new NeuralProperty<>(NeuralPropertyType.EnergyOnCurrentTile);
-        NeuralInCurrentTileWater = new NeuralProperty<>(NeuralPropertyType.CurrentTileWater);
+        NeuralInEnergy = new NeuralProperty<Double>(Energy, NeuralPropertyType.EnergySelf);
+        NeuralInAge = new NeuralProperty<Double>(Age, NeuralPropertyType.Age);
+        if (Settings.CreatureSettings.CanFeelOnBody) {
+            NeuralInEnergyOnCurrentTile = new NeuralProperty<>(NeuralPropertyType.EnergyOnCurrentTile);
+            NeuralInCurrentTileWater = new NeuralProperty<>(NeuralPropertyType.CurrentTileWater);
+        }
 
         NeuralOutRotation = new NeuralProperty<>(NeuralPropertyType.Rotate);
         NeuralOutForward = new NeuralProperty<>(NeuralPropertyType.Forward);
@@ -248,9 +257,7 @@ public class Creature {
         brain.AddInput(f.NeuralInFeelsWater, false);
         brain.AddInput(f.NeuralInEnergyValueFeeler, false);
         brain.AddOutput(f.Angle, false);
-        brain.AddOutput(f.Length, false);
-        brain.AddOutput(f.Attack, false);
-        brain.AddOutput(f.Heal, true);
+        brain.AddOutput(f.Length, true);
     }
 
     private void RemoveFeeler(){
@@ -260,27 +267,29 @@ public class Creature {
         brain.RemoveInput(f.NeuralInFeelsWater, false);
         brain.RemoveInput(f.NeuralInEnergyValueFeeler, false);
         brain.RemoveOutput(f.Angle, false);
-        brain.RemoveOutput(f.Length, false);
-        brain.RemoveOutput(f.Attack, false);
-        brain.RemoveOutput(f.Heal, true);
+        brain.RemoveOutput(f.Length, true);
     }
 
     public void Sense(){
         // Energy
-        NeuralInEnergy.setValue(Energy / Settings.CreatureSettings.BaseEnergy);
+        NeuralInEnergy.setValue((2 * Energy / Settings.CreatureSettings.BaseEnergy) - 1);
 
         // Age
-        NeuralInAge.setValue(Age / 10);
+        NeuralInAge.setValue(Age / 60 - 1);
 
         Tile t = Population.getTile((int)PositionX, (int)PositionY);
 
-        // EnergyOnCurrentTile
-        EnergyOnCurrentTile = t.Energy;
-        NeuralInEnergyOnCurrentTile.setValue(EnergyOnCurrentTile / Settings.SimulationSettings.MaxEnergyPerTile);
+        if (Settings.CreatureSettings.CanFeelOnBody){
+            // EnergyOnCurrentTile
+            EnergyOnCurrentTile = t.Energy;
+            if (NeuralInEnergyOnCurrentTile != null)
+                NeuralInEnergyOnCurrentTile.setValue((2 * EnergyOnCurrentTile / Settings.SimulationSettings.MaxEnergyPerTile) - 1);
 
-        // CurrentTileWater
-        CurrentTileWater = t.getType() == TileType.Water;
-        NeuralInCurrentTileWater.setValue((CurrentTileWater ? 1d : 0d));
+            // CurrentTileWater
+            CurrentTileWater = t.getType() == TileType.Water;
+            if (NeuralInCurrentTileWater != null)
+                NeuralInCurrentTileWater.setValue((CurrentTileWater ? 1d : -1d));
+        }
 
         // Feeler
         for (Feeler feeler : Feelers) {
@@ -290,10 +299,10 @@ public class Creature {
             t = Population.getTile(feelsOnX, feelsOnY);
 
             // Feeler.FeelsWater
-            feeler.NeuralInFeelsWater.setValue((t.getType() == TileType.Water ? 1d : 0d));
+            feeler.NeuralInFeelsWater.setValue((t.getType() == TileType.Water ? 1d : -1d));
 
             // Feeler.EnergyValueFeeler
-            feeler.NeuralInEnergyValueFeeler.setValue(t.Energy / Settings.SimulationSettings.MaxEnergyPerTile);
+            feeler.NeuralInEnergyValueFeeler.setValue((2 * EnergyOnCurrentTile / Settings.SimulationSettings.MaxEnergyPerTile) - 1);
         }
     }
 
@@ -307,23 +316,27 @@ public class Creature {
         Age += ((deltaTime / 1000));
 
         // Constant Energy Cost
-        Energy -= (Settings.CreatureSettings.EnergyDrainPerSecond * deltaTime / 1000);
-        Energy -= (Settings.CreatureSettings.AgeEnergyDrainPerSecond * SpecificAgingFactor * Age * deltaTime / 1000);
+        Energy -= (Settings.CreatureSettings.AgeEnergyDrainPerSecond * SpecificAgingFactor * (Math.pow(Age, 2)) * deltaTime / 1000);
         if (CurrentTileWater)
             Energy -= (Settings.CreatureSettings.EnergyDrainOnWaterPerSecond * deltaTime / 1000);
+
+        // Fat index
+        if (Energy > Settings.CreatureSettings.BaseEnergy){
+            Energy -= ((1/Settings.CreatureSettings.AllowedFatness) * (Energy - Settings.CreatureSettings.BaseEnergy)) / 1000;
+        }
 
         // Eat
         Energy += Population.Eat((int)PositionX, (int)PositionY, NeuralOutEat.getValue() * Settings.CreatureSettings.MaxEatPortionPerSecond * deltaTime / 1000);
 
         // Rotation
-        Rotation = NeuralOutRotation.getValue() * 2 * Math.PI;
+        Rotation += NeuralOutRotation.getValue() * Settings.CreatureSettings.RotationRangePerSecond / 1000;
 
         // Forward
         double move = Settings.CreatureSettings.MovingRangePerSecond * deltaTime / 1000;
         Energy -=  (Settings.CreatureSettings.MovingEnergyDrainPerPixel * Math.abs(NeuralOutForward.getValue()) * move);
 
-        double moveX = Math.cos(NeuralOutRotation.getValue()) * (NeuralOutForward.getValue() * move);
-        double moveY = Math.sin(NeuralOutRotation.getValue()) * (NeuralOutForward.getValue() * move);
+        double moveX = Math.cos(Rotation) * (NeuralOutForward.getValue() * move);
+        double moveY = Math.sin(Rotation) * (NeuralOutForward.getValue() * move);
 
         PositionX += moveX;
         PositionY += moveY;
@@ -439,5 +452,95 @@ public class Creature {
 
     public boolean inhibits(){
         return inhibit;
+    }
+
+    public byte[] serialize() {
+        List<Byte> bytes = new ArrayList<>();
+
+        byte[] fixedSizeValuesBytes = new byte[Double.BYTES * 9 + Long.BYTES + Integer.BYTES];
+        ByteBuffer fixedSizeValuesBuffer = ByteBuffer.wrap(fixedSizeValuesBytes);
+
+        fixedSizeValuesBuffer.putDouble(Energy);
+        fixedSizeValuesBuffer.putDouble(Age);
+        fixedSizeValuesBuffer.putDouble(PositionX);
+        fixedSizeValuesBuffer.putDouble(PositionY);
+        fixedSizeValuesBuffer.putDouble(Rotation);
+        fixedSizeValuesBuffer.putDouble(SpecificAgingFactor);
+        fixedSizeValuesBuffer.putDouble(Genetics.x);
+        fixedSizeValuesBuffer.putDouble(Genetics.y);
+        fixedSizeValuesBuffer.putDouble(Genetics.z);
+        fixedSizeValuesBuffer.putLong(Generation);
+        fixedSizeValuesBuffer.putInt(Feelers.size());
+
+        for (byte b : fixedSizeValuesBytes) bytes.add(b);
+
+        for (byte b : brain.serialize()) bytes.add(b);
+
+        return Util.ByteListToByteArray(bytes);
+    }
+
+    public static Creature Deserialize(byte[] bytes, Population p) throws IOException {
+        Creature c = new Creature();
+        c.Population = p;
+        c._draw = true;
+
+        c.EnergyOnCurrentTile = 0d;
+        c.CurrentTileWater = false;
+        c.inhibit = true;
+
+        if (bytes.length < Double.BYTES * 9 + Long.BYTES + Integer.BYTES)
+            throw new IOException("Corrupted Creature header");
+
+        ByteBuffer byteBuffer = ByteBuffer.wrap(bytes);
+
+        c.Energy = byteBuffer.getDouble();
+        c.Age = byteBuffer.getDouble();
+        c.PositionX = byteBuffer.getDouble();
+        c.PositionY = byteBuffer.getDouble();
+        c.Rotation = byteBuffer.getDouble();
+        c.SpecificAgingFactor = byteBuffer.getDouble();
+        c.Genetics = new Vector3d();
+        c.Genetics.x = byteBuffer.getDouble();
+        c.Genetics.y = byteBuffer.getDouble();
+        c.Genetics.z = byteBuffer.getDouble();
+        c.Generation = byteBuffer.getLong();
+        int feelerCount =  byteBuffer.getInt();
+
+        c.Feelers = new ArrayList<>();
+        for (int i = 0; i < feelerCount; i++) {
+            c.Feelers.add(new Feeler((byte)i));
+        }
+
+        byte[] neuralNetworkBytes = new byte[bytes.length - (Double.BYTES * 9 + Long.BYTES + Integer.BYTES)];
+        ByteBuffer brainBuffer = byteBuffer.get(neuralNetworkBytes);
+
+        c.brain = NeuralNetwork.Deserialize(neuralNetworkBytes);
+
+        for (NeuralProperty in : c.brain.getInputs()){
+            switch (in.getType()) { case Bias: break;
+                case EnergySelf: c.NeuralInEnergy = in; in.setValue(c.Energy); break;
+                case Age: c.NeuralInAge = in; in.setValue(c.Age); break;
+                case EnergyOnCurrentTile: c.NeuralInEnergyOnCurrentTile = in; in.setValue(0d); break;
+                case CurrentTileWater: c.NeuralInCurrentTileWater = in; in.setValue(0d); break;
+
+                // Feelers
+                case FeelsWater: c.Feelers.get(in.getTag()).NeuralInFeelsWater = in; in.setValue(0d); break;
+                case EnergyValueFeeler: c.Feelers.get(in.getTag()).NeuralInEnergyValueFeeler = in; in.setValue(0d); break;
+            }
+        }
+        for (NeuralProperty out : c.brain.getOutputs()) {
+            switch (out.getType()) {
+                case Rotate: c.NeuralOutRotation = out; out.setValue(0d); break;
+                case Forward: c.NeuralOutForward = out; out.setValue(0d); break;
+                case Eat: c.NeuralOutEat = out; out.setValue(0d); break;
+                case Replicate: c.NeuralOutReplicate = out; out.setValue(0d); break;
+
+                //Feelers
+                case FeelerAngle: c.Feelers.get(out.getTag()).Angle = out; out.setValue(0d); break;
+                case FeelerLength: c.Feelers.get(out.getTag()).Length = out; out.setValue(0d); break;
+            }
+        }
+
+        return c;
     }
 }

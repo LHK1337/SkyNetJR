@@ -13,8 +13,6 @@ public class Feeler {
         NeuralInEnergyValueFeeler = new NeuralProperty<>(NeuralPropertyType.EnergyValueFeeler, Tag);
         Angle = new NeuralProperty<>(NeuralPropertyType.FeelerAngle, Tag);
         Length = new NeuralProperty<>(NeuralPropertyType.FeelerLength, Tag);
-        Attack = new NeuralProperty<>(NeuralPropertyType.Attack, Tag);
-        Heal = new NeuralProperty<>(NeuralPropertyType.Heal, Tag);
     }
 
     // Sensing
@@ -24,6 +22,4 @@ public class Feeler {
     // Acting
     public NeuralProperty<Double> Angle;
     public NeuralProperty<Double> Length;
-    public NeuralProperty<Double> Attack;
-    public NeuralProperty<Double> Heal;
 }

@@ -3,15 +3,20 @@ package SkyNetJR.VirtualWorld;
 import SkyNetJR.Settings;
 import SkyNetJR.Utils.ValueNoise2D;
 
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.Random;
 
 public class TileMap {
+    private static final String SIGNATURE = "SkyNetJR.VirtualWorld.TileMap";
+
     private int _width;
     private int _height;
     private int _tileSize;
     private GenerationInfo _generationInfo;
-    private double _maxEnergyPerTile;
-    private double _baseEnergyGeneration;
     private Tile[][] _tiles;
     private int _totalLandTiles;
 
@@ -89,8 +94,6 @@ public class TileMap {
         _height = Settings.WorldSettings.Height;
         _tileSize = Settings.WorldSettings.TileSize;
         _generationInfo = GenerationInfo.GetDefaults();
-        _maxEnergyPerTile = Settings.SimulationSettings.MaxEnergyPerTile;
-        _baseEnergyGeneration = Settings.SimulationSettings.BaseEnergyGeneration;
         _totalLandTiles = 0;
     }
 
@@ -115,7 +118,7 @@ public class TileMap {
     public void Update(long deltaTime, int begin, int slice) {
         for (int x = begin; x < _width; x += slice) {
             for (int y = 0; y < _height; y++) {
-                if (_tiles[x][y].getType() != TileType.Water && _tiles[x][y].Energy != _maxEnergyPerTile) {
+                if (_tiles[x][y].getType() != TileType.Water && _tiles[x][y].Energy != Settings.SimulationSettings.MaxEnergyPerTile) {
                     double influence = Settings.SimulationSettings.BaseInfluence;
 
                     TileType[] nT = GetNeighbourTypes(_tiles, x, y);
@@ -123,18 +126,18 @@ public class TileMap {
 
                     for (int i = 0; i < nT.length; i++) {
                         if (nT[i] == TileType.Water) influence += Settings.SimulationSettings.WaterInfluence;
-                        else if (nT[i] == TileType.Land && nE[i] >= _maxEnergyPerTile * Settings.SimulationSettings.TileInfluenceThreshold) {
-                            influence += nE[i] / _maxEnergyPerTile * Settings.SimulationSettings.OutGrownTileInfluence;
+                        else if (nT[i] == TileType.Land && nE[i] >= Settings.SimulationSettings.MaxEnergyPerTile * Settings.SimulationSettings.TileInfluenceThreshold) {
+                            influence += nE[i] / Settings.SimulationSettings.MaxEnergyPerTile * Settings.SimulationSettings.OutGrownTileInfluence;
                         }
                     }
 
-                    _tiles[x][y].Energy += _baseEnergyGeneration * influence * ((double) deltaTime / 1000d);
+                    _tiles[x][y].Energy += Settings.SimulationSettings.BaseEnergyGeneration * influence * ((double) deltaTime / 1000d);
 
                     if (random.nextDouble() <= Settings.SimulationSettings.RandomEnergyGenerationChance)
                         _tiles[x][y].Energy += Settings.SimulationSettings.RandomEnergyGeneration;
 
-                    if (_tiles[x][y].Energy > _maxEnergyPerTile)
-                        _tiles[x][y].Energy = _maxEnergyPerTile;
+                    if (_tiles[x][y].Energy > Settings.SimulationSettings.MaxEnergyPerTile)
+                        _tiles[x][y].Energy = (double)Settings.SimulationSettings.MaxEnergyPerTile;
 
                     else if (_tiles[x][y].Energy < 0)
                         _tiles[x][y].Energy = 0.0d;
@@ -167,23 +170,76 @@ public class TileMap {
         this._generationInfo = generationInfo;
     }
 
-    public double getMaxEnergyPerTile() {
-        return _maxEnergyPerTile;
-    }
-
-    public void setMaxEnergyPerTile(double maxEnergyPerTile) {
-        _maxEnergyPerTile = maxEnergyPerTile;
-    }
-
-    public double getBaseEnergyGeneration() {
-        return _baseEnergyGeneration;
-    }
-
-    public void setBaseEnergyGeneration(double baseEnergyGeneration) {
-        _baseEnergyGeneration = baseEnergyGeneration;
-    }
-
     public int getTotalLandTiles() {
         return _totalLandTiles;
+    }
+
+    public void saveToFile(String fileName) throws IOException {
+        FileOutputStream of = new FileOutputStream(fileName, false);
+
+        of.write(SIGNATURE.getBytes(StandardCharsets.US_ASCII));
+
+        byte[] intBytes = new byte[Integer.BYTES * 3];
+        ByteBuffer intBuffer = ByteBuffer.wrap(intBytes);
+        intBuffer.putInt(_width);
+        intBuffer.putInt(_height);
+        intBuffer.putInt(_tileSize);
+        of.write(intBytes);
+
+        byte[] doubleBytes = new byte[_width * _height * Double.BYTES];
+        ByteBuffer doubleBuffer = ByteBuffer.wrap(doubleBytes);
+        for (int x = 0; x < _width; x++) {
+            for (int y = 0; y < _height; y++) {
+                doubleBuffer.putDouble(x * _width + y, _tiles[x][y].getType() == TileType.Water ? -1 : _tiles[x][y].Energy);
+            }
+        }
+
+        of.write(doubleBytes);
+
+        of.flush();
+        of.close();
+    }
+
+    public static TileMap LoadFromFile(String fileName) throws IOException {
+        FileInputStream _if = new FileInputStream(fileName);
+
+        byte[] sigBytes = new byte[SIGNATURE.length()];
+        if (_if.read(sigBytes) != sigBytes.length || new String(sigBytes) == SIGNATURE)
+            throw new IOException("File Signature mismatch");
+
+        TileMap t = new TileMap();
+        t._totalLandTiles = 0;
+
+        byte[] intBytes = new byte[Integer.BYTES * 3];
+        ByteBuffer intBuffer = ByteBuffer.wrap(intBytes);
+
+        if (_if.read(intBytes) != intBytes.length)
+            throw new IOException("Corrupted MapData Header");
+
+        t._width = intBuffer.getInt();
+        t._height = intBuffer.getInt();
+        t._tileSize = intBuffer.getInt();
+
+        byte[] mapData = new byte[t._width * t._height * Double.BYTES];
+        if (_if.read(mapData) != mapData.length)
+            throw new IOException("Corrupted MapData");
+
+        t._tiles = new Tile[t._width][t._height];
+        ByteBuffer buffer = ByteBuffer.wrap(mapData);
+
+        for (int x = 0; x < t._width; x++) {
+            for (int y = 0; y < t._height; y++) {
+                double d = buffer.getDouble(x * t._width + y);
+
+                if (d < 0) { t._tiles[x][y] = new Tile(0, TileType.Water, x, y); }
+                else       { t._tiles[x][y] = new Tile(d, TileType.Land, x, y); t._totalLandTiles++; }
+            }
+        }
+
+        t._generationInfo = null;
+
+        _if.close();
+
+        return t;
     }
 }
