@@ -159,7 +159,7 @@ public class BrainRenderer extends Renderer {
         return _nn;
     }
 
-    public void set_nn(NeuralNetwork _nn) {
+    public void set_nn(NeuralNetwork _nn) throws IllegalAccessException {
         this._nn = _nn;
     }
 }

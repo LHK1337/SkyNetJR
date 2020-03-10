@@ -46,7 +46,7 @@ public class Main {
         else {
             try {
                 map = TileMap.LoadFromFile("map.snet.map");
-            } catch (IOException e) {
+            } catch (IOException | ClassNotFoundException e) {
                 new File("map.snet.map").delete();
 
                 e.printStackTrace();
@@ -68,7 +68,7 @@ public class Main {
             {
                 try {
                     Population = SkyNetJR.Creatures.Population.LoadFromFile("population.snet.pop", World);
-                } catch (IOException e) {
+                } catch (IOException | ClassNotFoundException e) {
                     new File("population.snet.pop").delete();
                     e.printStackTrace();
                 }
@@ -105,7 +105,11 @@ public class Main {
                     " | Time/Creature: " + (float)Population.getLastSimulationTime() / (float)Population.getCreatures().size() + "ms"
             );
 
-            brainRenderer.set_nn(Population.getCreatures().get(0).getBrain());
+            try {
+                brainRenderer.set_nn(Population.getCreatures().get(0).getBrain());
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            }
 
             try {
                 if (true) World.getTileMap().saveToFile("map.snet.map");

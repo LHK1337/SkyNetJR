@@ -1,7 +1,6 @@
 package SkyNetJR.Graphics.Rendering;
 
 import SkyNetJR.Graphics.GLFWWindowManager.WindowManager;
-import SkyNetJR.Main.KeyInputs;
 import SkyNetJR.Threading.WindowThread;
 
 import java.util.ArrayList;
@@ -35,7 +34,6 @@ public class View {
 
     public void Start() {
         _windowThread.start();
-        _windowThread.AttachKeyInputCallback(KeyInputs::KeyHandler);
     }
 
     public List<Renderer> getRenderers() {
@@ -84,4 +82,16 @@ public class View {
     }
 
     public boolean getResizable() { return resizeable; }
+
+    public void setVisible(boolean _visible) {
+        this._windowThread.setVisible(_visible);
+    }
+
+    public void setClosable(boolean closable) { _windowThread.setAllowClosing(closable); }
+
+    public boolean isClosable() { return _windowThread.isAllowClosing(); }
+
+    public boolean isVisible() {
+        return _windowThread.isVisible();
+    }
 }

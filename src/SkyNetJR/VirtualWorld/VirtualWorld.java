@@ -18,7 +18,6 @@ public class VirtualWorld {
     private boolean _isRunning;
     private boolean _realTime;
 
-
     public long getLastSimulationTime() { return _lastSimulationTime; }
     public boolean isRunning() { return _isRunning; }
     public boolean isRealTime() { return _realTime; }
@@ -41,4 +40,8 @@ public class VirtualWorld {
 
 
     public void Destroy() { /* Destroy */ }
+
+    public long getWorldTime() {
+        return _tileMap.getMapTime();
+    }
 }

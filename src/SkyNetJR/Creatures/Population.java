@@ -6,11 +6,7 @@ import SkyNetJR.VirtualWorld.TileMap;
 import SkyNetJR.VirtualWorld.TileType;
 import SkyNetJR.VirtualWorld.VirtualWorld;
 
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -80,6 +76,7 @@ public class Population {
     }
 
     public void FillPopulation() {
+        _isRunning = true;
         Random r = new Random();
 
         TileMap map = _world.getTileMap();
@@ -149,66 +146,24 @@ public class Population {
 
     public void saveToFile(String fileName) throws IOException {
         FileOutputStream of = new FileOutputStream(fileName, false);
+        ObjectOutputStream oos = new ObjectOutputStream(of);
+        oos.writeObject(this);
 
-        of.write(SIGNATURE.getBytes(StandardCharsets.US_ASCII));
-
-        synchronized (_creatureLock){
-            of.write(ByteBuffer.wrap(new byte[Integer.BYTES]).putInt(_creatures.size()).array());
-
-            for (Creature c : _creatures){
-                if (c.getEnergy() <= 0)
-                    continue;
-
-                byte[] cBytes = c.serialize();
-                of.write(ByteBuffer.wrap(new byte[Integer.BYTES]).putInt(cBytes.length).array());
-                of.write(c.serialize());
-            }
-        }
-
+        oos.flush();
         of.flush();
+
+        oos.close();
         of.close();
     }
 
-    public static Population LoadFromFile(String fileName, VirtualWorld world) throws IOException {
+    public static Population LoadFromFile(String fileName, VirtualWorld world) throws IOException, ClassNotFoundException {
         FileInputStream _if = new FileInputStream(fileName);
+        ObjectInputStream ois = new ObjectInputStream(_if);
 
-        byte[] sigBytes = new byte[SIGNATURE.length()];
-        if (_if.read(sigBytes) != sigBytes.length || new String(sigBytes) == SIGNATURE)
-            throw new IOException("File Signature mismatch");
+        Population p = (Population)ois.readObject();
 
-        Population p = new Population(world);
-
-        ByteBuffer intBuffer = ByteBuffer.wrap(new byte[Integer.BYTES]);
-
-        if (_if.read(intBuffer.array()) != intBuffer.array().length)
-            throw new IOException("Corrupted creature count");
-
-        int creatureCount = intBuffer.getInt();
-
-        for (int i = 0; i < creatureCount; i++) {
-            try {
-                intBuffer = ByteBuffer.wrap(intBuffer.array()); // reset buffer
-
-                if (_if.read(intBuffer.array()) != intBuffer.array().length)
-                    throw new IOException("Corrupted creature length");
-
-                int creatureBytesLength = intBuffer.getInt();
-                byte[] creatureBytes = new byte[creatureBytesLength];
-                if (_if.read(creatureBytes) != creatureBytesLength)
-                    throw new IOException("Corrupted creature date");
-
-                p._creatures.add(Creature.Deserialize(creatureBytes, p));
-
-            } catch (IOException e){
-                e.printStackTrace(System.err);
-
-                if (p._creatures.size() > 0)
-                {
-                    System.out.println("Continuing with already loaded creatures..");
-                    break;
-                }
-            }
-        }
+        ois.close();
+        _if.close();
 
         return p;
     }

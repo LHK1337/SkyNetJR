@@ -1,13 +1,11 @@
 package SkyNetJR;
-import org.joml.Vector3d;
 
-import java.util.Random;
+import org.joml.Vector3d;
 
 public class Settings {
     // World Generation Settings
     public static class GenerationSettings {
-        public static final double LandThreshold = 0.6d;
-        public static final int Seed = new Random().nextInt();
+        public static final double LandThreshold = 0.7d;
         public static final int Octaves = 8;
         public static final int StartFrequencyX = 4;
         public static final int StartFrequencyY = 4;
@@ -28,9 +26,9 @@ public class Settings {
         public static final int BaseInfluence = 0;
         public static final double WaterInfluence = 3;
         public static final double OutGrownTileInfluence = 0.2;
-        public static final double TileInfluenceThreshold = 0.8d;
+        public static final double TileInfluenceThreshold = 0.99d;
         public static final int MaxEnergyPerTile = 30;
-        public static final double BaseEnergyGeneration = 7d;
+        public static final double BaseEnergyGeneration = 1d;
         public static final double StartEnergy = 20;
         public static final double RandomEnergyGenerationChance = 0.001d;
         public static final double RandomEnergyGeneration = 3d;
@@ -57,12 +55,12 @@ public class Settings {
         public static final double EnergyDrainPerFeelerPerSecond = 10d;
         public static final double EnergyDrainPerFeelerLengthPerSecond = 0.1d;
         public static final double EnergyDrainPerFeelerLengthExponent = 1d;
-        public static final double MovingRangePerSecond = 80;
+        public static final double MovingRangePerSecond = 20;
         public static final double RotationRangePerSecond = 2 * Math.PI;
         public static final double MaxEatPortionPerSecond = 2000;
         public static final int CreatureSize = 8;
-        public static final int MinPopulationSize = 25;
-        public static final int InitialPopulationSizeTarget = 200;
+        public static final int MinPopulationSize = 5;
+        public static final int InitialPopulationSizeTarget = 300;
         public static final double InitialFeelerLength = 8;
         public static final double MinFeelerLength = 8;
         public static final double MaxFeelerLength = 12;

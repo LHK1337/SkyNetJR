@@ -16,6 +16,8 @@ import static org.lwjgl.opengl.GL11.*;
 public class WindowThread extends DestroyableThread {
     private final View view;
     private boolean useVSync;
+    private boolean _allowClosing;
+    private boolean _visible;
 
     private long windowHandle;
     private WindowManager windowManager;
@@ -45,13 +47,19 @@ public class WindowThread extends DestroyableThread {
     public WindowThread(View view, WindowManager wm) {
         this.view = view;
         this.windowManager = wm;
+        _allowClosing = true;
     }
 
     @Override
     public void run() {
         Thread.currentThread().setName("RenderThread - " + view.toString());
 
-        windowHandle = windowManager.CreateNewWindow(view.getWidth(), view.getHeight(), view.getTitle(), null, view.getResizable(), false);
+        windowHandle = windowManager.CreateNewWindow(view.getWidth(), view.getHeight(), view.getTitle(), null, view.getResizable(), true);
+        glfwSetWindowCloseCallback(windowHandle, window -> {
+            glfwSetWindowShouldClose(window, this._allowClosing);
+
+            if (!this._allowClosing) setVisible(false);
+        });
 
         glfwMakeContextCurrent(windowHandle);
         GL.createCapabilities();
@@ -131,10 +139,31 @@ public class WindowThread extends DestroyableThread {
         GL11.glViewport(0, 0, view.getWidth(), view.getHeight());
     }
 
+    public void setVisible(boolean visible){
+        _visible = visible;
+
+        if (visible)
+            glfwShowWindow(windowHandle);
+        else
+            glfwHideWindow(windowHandle);
+    }
+
     @Override
     public void Destroy() {
         windowManager.DestroyWindow(windowHandle);
 
         super.Destroy();
+    }
+
+    public boolean isAllowClosing() {
+        return _allowClosing;
+    }
+
+    public void setAllowClosing(boolean _allowClosing) {
+        this._allowClosing = _allowClosing;
+    }
+
+    public boolean isVisible() {
+        return _visible;
     }
 }

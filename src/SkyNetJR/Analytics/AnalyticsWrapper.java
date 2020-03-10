@@ -2,23 +2,18 @@ package SkyNetJR.Analytics;
 
 import SkyNetJR.Creatures.Creature;
 import SkyNetJR.Creatures.Population;
-import SkyNetJR.Threading.WindowThread;
-import SkyNetJR.VirtualWorld.Tile;
 import SkyNetJR.VirtualWorld.VirtualWorld;
+
+import java.util.Arrays;
 
 public class AnalyticsWrapper {
     private VirtualWorld _virtualWorld;
     private Population _population;
-    private WindowThread _windowThread;
 
-    public AnalyticsWrapper(VirtualWorld virtualWorld, Population population, WindowThread windowThread) {
+    public AnalyticsWrapper(VirtualWorld virtualWorld, Population population) {
         _virtualWorld = virtualWorld;
         _population = population;
-        _windowThread = windowThread;
     }
-
-    public double getFrameRenderingTime() { return _windowThread.getRenderTime(); }
-    public double getFramePerSecond() { return 1 / getFrameRenderingTime(); }
 
     public double getWorldSimulationTime() { return _virtualWorld.getLastSimulationTime(); }
     public double getWorldSimulationsPerSecond() { return 1 / getWorldSimulationTime(); }
@@ -30,22 +25,10 @@ public class AnalyticsWrapper {
     public Creature getBestCreature() { if (getPopulationSize() >= 1) return _population.getCreatures().get(0); else return null; }
 
     public Double getTotalMapEnergy() {
-        double totalEnergy = 0;
-
-        for (Tile[] tt : _virtualWorld.getTileMap().getTiles())
-            for (Tile t: tt){
-                totalEnergy += t.Energy;
-            }
-
-        return totalEnergy;
+        return Arrays.stream(_virtualWorld.getTileMap().getTiles()).flatMap(Arrays::stream).mapToDouble(t -> t.Energy).sum();
     }
     public Double getTotalCreatureEnergy() {
-        double totalEnergy = 0;
-
-        for (Creature c : _population.getCreatures())
-            totalEnergy += c.getEnergy();
-
-        return totalEnergy;
+        return _population.getCreatures().stream().mapToDouble(Creature::getEnergy).sum();
     }
     public Double getTotalWorldEnergy() { return getTotalCreatureEnergy() + getTotalMapEnergy(); }
 }

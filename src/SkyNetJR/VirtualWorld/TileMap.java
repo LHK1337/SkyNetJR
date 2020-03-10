@@ -3,11 +3,7 @@ package SkyNetJR.VirtualWorld;
 import SkyNetJR.Settings;
 import SkyNetJR.Utils.ValueNoise2D;
 
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
+import java.io.*;
 import java.util.Random;
 
 public class TileMap {
@@ -19,6 +15,7 @@ public class TileMap {
     private GenerationInfo _generationInfo;
     private Tile[][] _tiles;
     private int _totalLandTiles;
+    private long _mapTime;
 
     private Random random;
 
@@ -76,6 +73,7 @@ public class TileMap {
 
     public TileMap() {
         random = new Random();
+        _mapTime = 0;
     }
 
     public double RequestConsumeEnergy(Tile t, double energy){
@@ -116,6 +114,8 @@ public class TileMap {
 
     public void Update(long deltaTime) {Update(deltaTime, 0, 1);}
     public void Update(long deltaTime, int begin, int slice) {
+        _mapTime += deltaTime;
+
         for (int x = begin; x < _width; x += slice) {
             for (int y = 0; y < _height; y++) {
                 if (_tiles[x][y].getType() != TileType.Water && _tiles[x][y].Energy != Settings.SimulationSettings.MaxEnergyPerTile) {
@@ -176,70 +176,29 @@ public class TileMap {
 
     public void saveToFile(String fileName) throws IOException {
         FileOutputStream of = new FileOutputStream(fileName, false);
+        ObjectOutputStream oos = new ObjectOutputStream(of);
+        oos.writeObject(this);
 
-        of.write(SIGNATURE.getBytes(StandardCharsets.US_ASCII));
-
-        byte[] intBytes = new byte[Integer.BYTES * 3];
-        ByteBuffer intBuffer = ByteBuffer.wrap(intBytes);
-        intBuffer.putInt(_width);
-        intBuffer.putInt(_height);
-        intBuffer.putInt(_tileSize);
-        of.write(intBytes);
-
-        byte[] doubleBytes = new byte[_width * _height * Double.BYTES];
-        ByteBuffer doubleBuffer = ByteBuffer.wrap(doubleBytes);
-        for (int x = 0; x < _width; x++) {
-            for (int y = 0; y < _height; y++) {
-                doubleBuffer.putDouble(x * _width + y, _tiles[x][y].getType() == TileType.Water ? -1 : _tiles[x][y].Energy);
-            }
-        }
-
-        of.write(doubleBytes);
-
+        oos.flush();
         of.flush();
+
+        oos.close();
         of.close();
     }
 
-    public static TileMap LoadFromFile(String fileName) throws IOException {
+    public static TileMap LoadFromFile(String fileName) throws IOException, ClassNotFoundException {
         FileInputStream _if = new FileInputStream(fileName);
+        ObjectInputStream ois = new ObjectInputStream(_if);
 
-        byte[] sigBytes = new byte[SIGNATURE.length()];
-        if (_if.read(sigBytes) != sigBytes.length || new String(sigBytes) == SIGNATURE)
-            throw new IOException("File Signature mismatch");
+        TileMap t = (TileMap)ois.readObject();
 
-        TileMap t = new TileMap();
-        t._totalLandTiles = 0;
-
-        byte[] intBytes = new byte[Integer.BYTES * 3];
-        ByteBuffer intBuffer = ByteBuffer.wrap(intBytes);
-
-        if (_if.read(intBytes) != intBytes.length)
-            throw new IOException("Corrupted MapData Header");
-
-        t._width = intBuffer.getInt();
-        t._height = intBuffer.getInt();
-        t._tileSize = intBuffer.getInt();
-
-        byte[] mapData = new byte[t._width * t._height * Double.BYTES];
-        if (_if.read(mapData) != mapData.length)
-            throw new IOException("Corrupted MapData");
-
-        t._tiles = new Tile[t._width][t._height];
-        ByteBuffer buffer = ByteBuffer.wrap(mapData);
-
-        for (int x = 0; x < t._width; x++) {
-            for (int y = 0; y < t._height; y++) {
-                double d = buffer.getDouble(x * t._width + y);
-
-                if (d < 0) { t._tiles[x][y] = new Tile(0, TileType.Water, x, y); }
-                else       { t._tiles[x][y] = new Tile(d, TileType.Land, x, y); t._totalLandTiles++; }
-            }
-        }
-
-        t._generationInfo = null;
-
+        ois.close();
         _if.close();
 
         return t;
+    }
+
+    public long getMapTime() {
+        return _mapTime;
     }
 }

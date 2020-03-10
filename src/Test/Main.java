@@ -27,7 +27,7 @@ public class Main {
         TileMap map = null;
         try {
             map = TileMap.LoadFromFile("map.snet.map");
-        } catch (IOException e) {
+        } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
         VirtualWorld world = new VirtualWorld(map);
@@ -43,7 +43,7 @@ public class Main {
         Population pop2 = null;
         try {
             pop2 = Population.LoadFromFile("population.snet.pop", world);
-        } catch (IOException e) {
+        } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
     }
