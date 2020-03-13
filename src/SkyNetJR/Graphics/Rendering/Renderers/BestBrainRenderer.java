@@ -1,3 +1,7 @@
+/*
+* Klasse die das Beste Gehirn einer Population rendert.
+* */
+
 package SkyNetJR.Graphics.Rendering.Renderers;
 
 import SkyNetJR.AI.NeuralNetwork;
@@ -13,6 +17,7 @@ public class BestBrainRenderer extends BrainRenderer {
 
     @Override
     public void Render(int offsetX, int offsetY) {
+        // Ermittlung des besten Gehirns
         if (_population != null && _population.isRunning() && _population.getCreatures().size() > 0) {
             try {
                 super.set_nn(_population.getCreatures().get(0).getBrain());
@@ -25,6 +30,7 @@ public class BestBrainRenderer extends BrainRenderer {
         super.Render(offsetX, offsetY);
     }
 
+    // Setter und Getter
     @Override
     public void set_nn(NeuralNetwork nn) throws IllegalAccessException {
         throw new IllegalAccessException();

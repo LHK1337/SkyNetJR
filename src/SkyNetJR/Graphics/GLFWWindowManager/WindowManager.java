@@ -1,3 +1,7 @@
+/*
+* Helferklasse, die das Erstellen von Fenstern übernimmt.
+* */
+
 package SkyNetJR.Graphics.GLFWWindowManager;
 
 import org.lwjgl.glfw.GLFWErrorCallback;
@@ -20,46 +24,19 @@ public class WindowManager {
         WindowHandles = new ArrayList<>();
     }
 
+    // GLFW initialisieren
     public void Init() {
         GLFWErrorCallback.createPrint(System.err);
 
         if (!glfwInit())
             throw new IllegalStateException("Unable to initialize GLFW");
 
-        // Configure GLFW
-        glfwDefaultWindowHints(); // optional, the current window hints are already the default
-    }
-
-    public void Destroy() {
-        for (int i = WindowHandles.size() - 1; i >= 0; i--)
-            DestroyWindow(WindowHandles.get(i));
-
-        // Terminate GLFW and free the error callback
-        glfwTerminate();
-        try {
-            Objects.requireNonNull(glfwSetErrorCallback(null)).free();
-        } catch (NullPointerException e) {
-            // ignore
-        }
-    }
-
-    public void DestroyWindow(long window) {
-        // Free the window callbacks and destroy the window
-        glfwFreeCallbacks(window);
-        //glfwDestroyWindow(window);
-
-        WindowHandlesLock.lock();
-        for (int i = 0; i < WindowHandles.size(); i++)
-            if (WindowHandles.get(i) == window) {
-                WindowHandles.remove(i);
-                break;
-            }
-        WindowHandlesLock.unlock();
+        glfwDefaultWindowHints();
     }
 
     public long CreateNewWindow(int width, int height, String title, GLFWKeyCallback keyCallback, boolean resizable, boolean createHidden) {
-        glfwWindowHint(GLFW_VISIBLE, createHidden ? GLFW_FALSE : GLFW_TRUE); // the window will stay hidden after creation
-        glfwWindowHint(GLFW_RESIZABLE, resizable ? GLFW_TRUE : GLFW_FALSE); // the window will be resizable
+        glfwWindowHint(GLFW_VISIBLE, createHidden ? GLFW_FALSE : GLFW_TRUE); // Legt fest, ob das Fenster versteckt bleiben soll
+        glfwWindowHint(GLFW_RESIZABLE, resizable ? GLFW_TRUE : GLFW_FALSE); // Legt fest, ob der Nutzer die Größe des Fensters bearbeiten kann
 
         long window = glfwCreateWindow(width, height, title, NULL, NULL);
         if (window == NULL)
@@ -74,7 +51,35 @@ public class WindowManager {
         return window;
     }
 
+    // Zerstört bestimmtes Fenster und räumt Arbeitsspeicher auf
+    public void DestroyWindow(long window) {
+        glfwFreeCallbacks(window);
+        glfwDestroyWindow(window);
+
+        WindowHandlesLock.lock();
+        for (int i = 0; i < WindowHandles.size(); i++)
+            if (WindowHandles.get(i) == window) {
+                WindowHandles.remove(i);
+                break;
+            }
+        WindowHandlesLock.unlock();
+    }
+
+    // Getter
     public Long[] GetWindowHandles() {
         return (Long[]) WindowHandles.toArray();
+    }
+
+    // Zerstört WindowManager und alle seine Fenster und räumt Arbeitsspeicher
+    public void Destroy() {
+        for (int i = WindowHandles.size() - 1; i >= 0; i--)
+            DestroyWindow(WindowHandles.get(i));
+
+        glfwTerminate();
+        try {
+            Objects.requireNonNull(glfwSetErrorCallback(null)).free();
+        } catch (NullPointerException e) {
+            // ignore
+        }
     }
 }

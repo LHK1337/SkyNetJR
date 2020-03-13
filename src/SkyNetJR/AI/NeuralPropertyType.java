@@ -1,3 +1,7 @@
+/*
+* Auflistung aller verfügbaren Typen von NeuralProperties
+* */
+
 package SkyNetJR.AI;
 
 public enum NeuralPropertyType {
@@ -39,6 +43,7 @@ public enum NeuralPropertyType {
         return value;
     }
 
+    // Cachen der aufgelisteten Werten, um Funktionsaufruf zu beschleunigen
     private static NeuralPropertyType[] cache =  NeuralPropertyType.values();
     public static NeuralPropertyType FromByte(byte value){
         return cache[value];

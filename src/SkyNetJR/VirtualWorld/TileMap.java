@@ -1,3 +1,8 @@
+/*
+* Beinhaltet die Logik hinter der TileMap.
+* TileMap = Datenstruktur aus Tiles, die das Terrain darstellt
+* */
+
 package SkyNetJR.VirtualWorld;
 
 import SkyNetJR.Settings;
@@ -7,8 +12,7 @@ import java.io.*;
 import java.util.Random;
 
 public class TileMap {
-    private static final String SIGNATURE = "SkyNetJR.VirtualWorld.TileMap";
-
+    // Eigenschaften
     private int _width;
     private int _height;
     private int _tileSize;
@@ -19,74 +23,12 @@ public class TileMap {
 
     private Random random;
 
-    public static TileType[] GetNeighbourTypes(Tile[][] t, int x, int y){
-        TileType[] neighbours = new TileType[4];
-
-        if (x > 0)
-        {
-            neighbours[0] = t[x - 1][y].getType() == TileType.Water ? TileType.Water : TileType.Land;
-        } else neighbours[0] = null;
-
-        if (y > 0)
-        {
-            neighbours[1] = t[x][y - 1].getType() == TileType.Water ? TileType.Water : TileType.Land;
-        } else neighbours[1] = null;
-
-        if (x < t.length - 1)
-        {
-            neighbours[2] = t[x + 1][y].getType() == TileType.Water ? TileType.Water : TileType.Land;
-        } else neighbours[2] = null;
-
-        if (y < t[x].length - 1)
-        {
-            neighbours[3] = t[x][y + 1].getType() == TileType.Water ? TileType.Water : TileType.Land;
-        } else neighbours[3] = null;
-
-        return neighbours;
-    }
-
-    public static Double[] GetNeighbourEnergy(Tile[][] t, int x, int y){
-        Double[] neighbours = new Double[4];
-
-        if (x > 0)
-        {
-            neighbours[0] = t[x - 1][y].Energy;
-        } else neighbours[0] = null;
-
-        if (y > 0)
-        {
-            neighbours[1] = t[x][y - 1].Energy;
-        } else neighbours[1] = null;
-
-        if (x < t.length - 1)
-        {
-            neighbours[2] = t[x + 1][y].Energy;
-        } else neighbours[2] = null;
-
-        if (y < t[x].length - 1)
-        {
-            neighbours[3] = t[x][y + 1].Energy;
-        } else neighbours[3] = null;
-
-        return neighbours;
-    }
-
     public TileMap() {
         random = new Random();
         _mapTime = 0;
     }
 
-    public double RequestConsumeEnergy(Tile t, double energy){
-        if (_tiles[t.X][t.Y].Energy >= energy){
-            _tiles[t.X][t.Y].Energy -= energy;
-        }else {
-            energy = _tiles[t.X][t.Y].Energy;
-            _tiles[t.X][t.Y].Energy = 0d;
-        }
-
-        return energy;
-    }
-
+    // Standarteinstellungen setzen
     public void SetDefaults() {
         _width = Settings.WorldSettings.Width;
         _height = Settings.WorldSettings.Height;
@@ -95,6 +37,7 @@ public class TileMap {
         _totalLandTiles = 0;
     }
 
+    // Neues Terrain genereieren
     public void Generate() {
         ValueNoise2D vn = new ValueNoise2D(_width, _height, _generationInfo);
         vn.Calculate();
@@ -105,6 +48,7 @@ public class TileMap {
 
             for (int x = 0; x < _width; x++) {
                 for (int y = 0; y < _height; y++) {
+                    // Unterschreitet der aktuelle Wert aus dem Rauschen, wird das aktuelle Tile zu Land, sonst Wasser
                     _tiles[x][y] = new Tile(Settings.SimulationSettings.StartEnergy, heightMap[x][y] <= _generationInfo.LandThreshold ? TileType.Land : TileType.Water, x, y);
                     if (_tiles[x][y].getType() == TileType.Land) _totalLandTiles++;
                 }
@@ -112,6 +56,7 @@ public class TileMap {
         }
     }
 
+    // Nächste Zeiteinheit der virtuellen Welt berechnen
     public void Update(long deltaTime) {Update(deltaTime, 0, 1);}
     public void Update(long deltaTime, int begin, int slice) {
         _mapTime += deltaTime;
@@ -146,6 +91,95 @@ public class TileMap {
         }
     }
 
+    // Eigenschaften eines Nachbartiles eines Tiles ermitteln
+    public static TileType[] GetNeighbourTypes(Tile[][] t, int x, int y){
+        TileType[] neighbours = new TileType[4];
+
+        if (x > 0)
+        {
+            neighbours[0] = t[x - 1][y].getType() == TileType.Water ? TileType.Water : TileType.Land;
+        } else neighbours[0] = null;
+
+        if (y > 0)
+        {
+            neighbours[1] = t[x][y - 1].getType() == TileType.Water ? TileType.Water : TileType.Land;
+        } else neighbours[1] = null;
+
+        if (x < t.length - 1)
+        {
+            neighbours[2] = t[x + 1][y].getType() == TileType.Water ? TileType.Water : TileType.Land;
+        } else neighbours[2] = null;
+
+        if (y < t[x].length - 1)
+        {
+            neighbours[3] = t[x][y + 1].getType() == TileType.Water ? TileType.Water : TileType.Land;
+        } else neighbours[3] = null;
+
+        return neighbours;
+    }
+    public static Double[] GetNeighbourEnergy(Tile[][] t, int x, int y){
+        Double[] neighbours = new Double[4];
+
+        if (x > 0)
+        {
+            neighbours[0] = t[x - 1][y].Energy;
+        } else neighbours[0] = null;
+
+        if (y > 0)
+        {
+            neighbours[1] = t[x][y - 1].Energy;
+        } else neighbours[1] = null;
+
+        if (x < t.length - 1)
+        {
+            neighbours[2] = t[x + 1][y].Energy;
+        } else neighbours[2] = null;
+
+        if (y < t[x].length - 1)
+        {
+            neighbours[3] = t[x][y + 1].Energy;
+        } else neighbours[3] = null;
+
+        return neighbours;
+    }
+
+    // Energieänderung beantragen (z.B. wenn eine Kreatur versucht zu Essen)
+    public double RequestConsumeEnergy(Tile t, double energy){
+        if (_tiles[t.X][t.Y].Energy >= energy){
+            _tiles[t.X][t.Y].Energy -= energy;
+        }else {
+            energy = _tiles[t.X][t.Y].Energy;
+            _tiles[t.X][t.Y].Energy = 0d;
+        }
+
+        return energy;
+    }
+
+    // Speichern bzw. Laden des Terrains auf bzw. von der Festplatte
+    public void saveToFile(String fileName) throws IOException {
+        FileOutputStream of = new FileOutputStream(fileName, false);
+        ObjectOutputStream oos = new ObjectOutputStream(of);
+        oos.writeObject(this);
+
+        oos.flush();
+        of.flush();
+
+        oos.close();
+        of.close();
+    }
+    public static TileMap LoadFromFile(String fileName) throws IOException, ClassNotFoundException {
+        FileInputStream _if = new FileInputStream(fileName);
+        ObjectInputStream ois = new ObjectInputStream(_if);
+
+        TileMap t = (TileMap)ois.readObject();
+
+        ois.close();
+        _if.close();
+
+        return t;
+    }
+
+    // Getter und Setter
     public Tile[][] getTiles() {
         return _tiles;
     }
@@ -172,30 +206,6 @@ public class TileMap {
 
     public int getTotalLandTiles() {
         return _totalLandTiles;
-    }
-
-    public void saveToFile(String fileName) throws IOException {
-        FileOutputStream of = new FileOutputStream(fileName, false);
-        ObjectOutputStream oos = new ObjectOutputStream(of);
-        oos.writeObject(this);
-
-        oos.flush();
-        of.flush();
-
-        oos.close();
-        of.close();
-    }
-
-    public static TileMap LoadFromFile(String fileName) throws IOException, ClassNotFoundException {
-        FileInputStream _if = new FileInputStream(fileName);
-        ObjectInputStream ois = new ObjectInputStream(_if);
-
-        TileMap t = (TileMap)ois.readObject();
-
-        ois.close();
-        _if.close();
-
-        return t;
     }
 
     public long getMapTime() {

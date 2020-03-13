@@ -1,3 +1,7 @@
+/*
+* Klasse die ein Gehirn rendert.
+* */
+
 package SkyNetJR.Graphics.Rendering.Renderers;
 
 import SkyNetJR.AI.NeuralNetwork;
@@ -10,6 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class BrainRenderer extends Renderer {
+    // Voreinstellungen
     private static final int CirclePrecision = 20;
     private static final Vector3d LineColor = new Vector3d(1, 1, 1);
     private static final Vector3d NeuronPositiveActivityColor = new Vector3d(0, 1, 0);
@@ -32,7 +37,7 @@ public class BrainRenderer extends Renderer {
 
             int maxNeuronCount = _nn.getInputs().length;
 
-            // calculate value per neuron
+            // Wert pro Neuron berechnen
             neuronActivities.add(new double[_nn.getInputs().length]);
             for (int j = 0; j < neuronActivities.get(neuronActivities.size() - 1).length; j++) {
                 neuronActivities.get(neuronActivities.size() - 1)[j] = (double) _nn.getInputs()[j].getValue();
@@ -43,12 +48,12 @@ public class BrainRenderer extends Renderer {
             for (int i = 0; i < weights.size(); i++) {
                 double[][] layer = weights.get(i);
 
-                // determine layer with most neurons
+                // Größte Schicht des Neuronalen Netzes ermitteln
                 if (layer.length > maxNeuronCount)
                     maxNeuronCount = layer.length;
             }
 
-            // calculate neuron Positions
+            // Position der Neuronen in dem Fenster berechnen
             List<Vector2d[]> neuronVertices = new ArrayList<>();
             for (int i = 0; i < neuronActivities.size(); i++) {
                 neuronVertices.add(new Vector2d[neuronActivities.get(i).length]);
@@ -61,22 +66,12 @@ public class BrainRenderer extends Renderer {
                 }
             }
 
-            // draw
+            // Neuronales Netz zeichen/rendern
             for (int i = 0; i < neuronVertices.size(); i++) {
                 if (i < neuronVertices.size() - 1){
                     for (int j = 0; j < neuronVertices.get(i).length; j++) {
                         for (int k = 0; k < neuronVertices.get(i + 1).length; k++) {
                             double weight = weights.get(i)[k][j];
-
-//                            Vector3d color = weight > 0 ?
-//                                    new Vector3d(
-//                                        LineColor.x - (weight * (1 - NeuronPositiveActivityColor.x)),
-//                                        LineColor.y - (weight * (1 - NeuronPositiveActivityColor.y)),
-//                                        LineColor.z - (weight * (1 - NeuronPositiveActivityColor.z))) :
-//                                    new Vector3d(
-//                                        LineColor.x + (weight * (1 - NeuronNegativeActivityColor.x)),
-//                                        LineColor.y + (weight * (1 - NeuronNegativeActivityColor.y)),
-//                                        LineColor.z + (weight * (1 - NeuronNegativeActivityColor.z)));
 
                             Vector3d color = weight > 0 ?
                                     new Vector3d(
@@ -115,6 +110,7 @@ public class BrainRenderer extends Renderer {
         }
     }
 
+    // Zeichet eine Linie zwischen p und q mit der Farbe color
     private void drawLine(Vector2d p, Vector2d q, Vector3d color){
         GL11.glColor3d(color.x, color.y, color.z);
         GL11.glBegin(GL11.GL_LINES);
@@ -125,6 +121,7 @@ public class BrainRenderer extends Renderer {
         GL11.glEnd();
     }
 
+    // Zeichet einen Kreis an der Position (x;y), mit dem Radius r und füllt ihn mit der Farbe fill
     private void drawCircle(double x, double y, double r, Vector3d fill){
         GL11.glColor3d(fill.x, fill.y, fill.z);
         GL11.glBegin(GL11.GL_TRIANGLE_FAN);
@@ -138,8 +135,9 @@ public class BrainRenderer extends Renderer {
         GL11.glEnd();
     }
 
-    private void drawHollowCircle(double x, double y, double r, Vector3d fill){
-        GL11.glColor3d(fill.x, fill.y, fill.z);
+    // Zeichet eine Kreislinie an der Position (x;y), mit dem Radius r und mit der Farbe color
+    private void drawHollowCircle(double x, double y, double r, Vector3d color){
+        GL11.glColor3d(color.x, color.y, color.z);
         GL11.glBegin(GL11.GL_LINE_LOOP);
         for (int i = 0; i < CirclePrecision; i++) {
             GL11.glVertex2d(
@@ -150,16 +148,14 @@ public class BrainRenderer extends Renderer {
         GL11.glEnd();
     }
 
-    @Override
-    public void Destroy() {
-
-    }
-
+    // Getter und Setter
     public NeuralNetwork get_nn() {
         return _nn;
     }
-
     public void set_nn(NeuralNetwork _nn) throws IllegalAccessException {
         this._nn = _nn;
     }
+
+    @Override
+    public void Destroy() { }
 }

@@ -1,6 +1,10 @@
+/*
+* Helferklasse, Stoppuhr
+* */
+
 package SkyNetJR.Utils;
 
-public class Timer {
+public class Stopwatch {
 
     private long startTime = 0;
     private long endTime = 0;

@@ -1,3 +1,7 @@
+/*
+* Datenstruktur für Informationen der Weltgeneration
+* */
+
 package SkyNetJR.VirtualWorld;
 
 import SkyNetJR.Settings;

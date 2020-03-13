@@ -1,3 +1,7 @@
+/*
+* Klasse zum Rendern der Population
+* */
+
 package SkyNetJR.Graphics.Rendering.Renderers;
 
 import SkyNetJR.Creatures.Creature;
@@ -29,6 +33,7 @@ public class PopulationRenderer extends Renderer {
 
             if (c.inhibits() || !c.getDraw()) continue;
 
+            // Körper der Kreatur zeichnen
             GL11.glColor3d(c.getGenetics().x, c.getGenetics().y, c.getGenetics().z);
             GL11.glBegin(GL11.GL_QUADS);
             GL11.glVertex2d(offsetX + c.getPositionX() - (Settings.CreatureSettings.CreatureSize * 0.5), offsetY + c.getPositionY() + (Settings.CreatureSettings.CreatureSize * 0.5));
@@ -37,6 +42,7 @@ public class PopulationRenderer extends Renderer {
             GL11.glVertex2d(offsetX + c.getPositionX() - (Settings.CreatureSettings.CreatureSize * 0.5), offsetY + c.getPositionY() - (Settings.CreatureSettings.CreatureSize * 0.5));
             GL11.glEnd();
 
+            // Fühler der Kreatur zeichnen
             GL11.glColor3d(0, 0, 0);
             GL11.glBegin(GL11.GL_LINES);
             for (int j = 0; j < c.getFeelers().size(); j++) {
@@ -55,16 +61,14 @@ public class PopulationRenderer extends Renderer {
         }
     }
 
-    @Override
-    public void Destroy() {
-
-    }
-
+    // Getter und Setter
     public Population getPopulation() {
         return population;
     }
-
     public void setPopulation(Population population) {
         this.population = population;
     }
+
+    @Override
+    public void Destroy() { }
 }

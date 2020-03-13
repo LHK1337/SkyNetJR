@@ -1,10 +1,14 @@
+/*
+* Beschreibt Logik der Fühler der Kreaturen
+* */
+
 package SkyNetJR.Creatures;
 
 import SkyNetJR.AI.NeuralProperty;
 import SkyNetJR.AI.NeuralPropertyType;
 
 public class Feeler {
-    public byte Tag;
+    public byte Tag;    // Identifikation des Fühlers
 
     public Feeler(byte tag){
         Tag = tag;

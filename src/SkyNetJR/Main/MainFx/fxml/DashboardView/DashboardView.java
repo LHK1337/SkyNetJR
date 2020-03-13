@@ -1,3 +1,8 @@
+/*
+* Controllerklasse für die JavaFX Ansicht
+* Beinhaltet Logik der JavaFX Elemente
+* */
+
 package SkyNetJR.Main.MainFx.fxml.DashboardView;
 
 import SkyNetJR.Analytics.AnalyticsWrapper;
@@ -24,6 +29,9 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 public class DashboardView {
+    // @FXML kennzeichnet Objekte aus der JavaFX Ansicht
+
+    // Diagramme und deren Datenreihen
     @FXML private AreaChart<Double, Double> energyDistribution;
     private AreaChart.Series<Double, Double> energyDistributionCreature;
     private AreaChart.Series<Double, Double> energyDistributionMap;
@@ -31,20 +39,22 @@ public class DashboardView {
     @FXML private BarChart<String, Double> creaturesPerGeneration;
     private BarChart.Series<String, Double> creaturesPerGenerationSeries;
 
+    // Elemente für den Nutzer zu Interaktion
     @FXML private CheckBox toggleWorldView;
     @FXML private CheckBox toggleFastForward;
     @FXML private CheckBox toggleBrainView;
     @FXML private Button newSim;
 
+    // Timer zum Abrufen der Daten aus der Simulation
     private Timer mainTimer;
 
+    // Objekte der Simulation
     public VirtualWorld World;
     public SkyNetJR.Creatures.Population Population;
     public View WorldView;
     public View BrainView;
     public SkyNetJR.Threading.SimulationThread SimulationThread;
     private static WindowManager _windowManager;
-    public AnalyticsWrapper Info;
 
     @FXML private void initialize()
     {
@@ -57,7 +67,6 @@ public class DashboardView {
         WorldView.setUseVSync(true);
         WorldView.Start();
         WorldView.setClosable(false);
-        //WorldView.setVisible(true);
 
         // Fenster für das beste neuronale Netz erstellen
         BrainView = new View(1280, 720, "SkyNetJR - Neuronales Netz", true, _windowManager);
@@ -65,7 +74,6 @@ public class DashboardView {
         BrainView.Start();
         BrainView.setClosable(false);
         BrainView.getRenderers().add(new BestBrainRenderer(null));
-        //BrainView.setVisible(true);
 
         // Energieverteilung
         energyDistributionCreature = new XYChart.Series<>(FXCollections.observableArrayList());
@@ -82,12 +90,13 @@ public class DashboardView {
         creaturesPerGeneration.setData(FXCollections.observableArrayList(creaturesPerGenerationSeries));
 
         mainTimer = new Timer();
+        //// Periodische Routinen definieren
+        // Aktualisieren der Diagramme
         mainTimer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
                 if (SimulationThread != null && SimulationThread.isStarted()) {
                     // Informationen sammeln
-
                     AnalyticsWrapper wrapper = new AnalyticsWrapper(World, Population);
                     double time = World.getWorldTime() / 1000d;
 
@@ -99,8 +108,8 @@ public class DashboardView {
                         else creaturePerGenerationCount.put(g, 1d);
                     }
 
-                    // Informationen in Diagramme laden
-                    Platform.runLater(new Runnable() {
+                    // Ältere Datenpunkte wieder aus Diagramm entfernen
+                    Platform.runLater(new Runnable() {  // Definiert Routine im Thread des Timers aber führt diese erst später im GUI-Thread der Anwendung aus.
                         @Override
                         public void run() {
                             for (int i = 0; i < energyDistributionCreature.getData().size(); i++) {
@@ -114,21 +123,25 @@ public class DashboardView {
                                 }
                             }
 
+                            // Neue Datenpunkte in Diagramme laden
                             energyDistributionCreature.getData().add(new StackedAreaChart.Data(time, (wrapper.getTotalCreatureEnergy())));
                             energyDistributionMap.getData().add(new StackedAreaChart.Data(time, (wrapper.getTotalMapEnergy() / 10)));
-                            ((ValueAxis<Double>)energyDistribution.getXAxis()).setLowerBound(Math.round(energyDistributionCreature.getData().get(0).getXValue()));
-                            ((ValueAxis<Double>)energyDistribution.getXAxis()).setUpperBound(Math.round(energyDistributionCreature.getData().get(energyDistributionCreature.getData().size() - 1).getXValue()));
-                            ((ValueAxis<Double>)energyDistribution.getXAxis()).setMinorTickVisible(false);
 
                             creaturesPerGenerationSeries.getData().clear();
                             for (Long l : creaturePerGenerationCount.keySet()){
                                 creaturesPerGenerationSeries.getData().add(new XYChart.Data<>(l.toString(), creaturePerGenerationCount.get(l)));
                             }
+
+                            // Zeitachse manuell skalieren
+                            ((ValueAxis<Double>)energyDistribution.getXAxis()).setLowerBound(Math.round(energyDistributionCreature.getData().get(0).getXValue()));
+                            ((ValueAxis<Double>)energyDistribution.getXAxis()).setUpperBound(Math.round(energyDistributionCreature.getData().get(energyDistributionCreature.getData().size() - 1).getXValue()));
+                            ((ValueAxis<Double>)energyDistribution.getXAxis()).setMinorTickVisible(false);
                         }
                     });
                 }
             }
         }, 1000, 1000);
+        // Aktualisieren der Benutzerelemente
         mainTimer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
@@ -160,9 +173,12 @@ public class DashboardView {
         }, 200, 200);
     }
 
+    // Generiert und startet eine neue Simulation
     @FXML private void generateNewSim(){
+        // Daten zurücksetzen
         resetData();
 
+        // Ansichten zurücksetzen
         WorldView.getRenderers().clear();
         ((BestBrainRenderer)BrainView.getRenderers().get(0)).setPopulation(null);
 
@@ -170,6 +186,7 @@ public class DashboardView {
         if (Population != null) Population.Destroy();
         if (World != null) World.Destroy();
 
+        // Simulatio vorbereiten
         TileMap map = new TileMap();
         map.SetDefaults();
         map.Generate();
@@ -180,15 +197,18 @@ public class DashboardView {
         Population = new Population(World);
         Population.FillPopulation();
 
-        SimulationThread = new SimulationThread(World, Population, 60, true, true);
+        // Simulation in seperatem Thread starten
+        SimulationThread = new SimulationThread(World, Population, Settings.SimulationSettings.TimePrecision, true, true);
         SimulationThread.start();
 
+        // Neue Renderer für Simulationsansicht erstellen
         WorldView.getRenderers().add(new VirtualWorldRenderer(World));
         WorldView.getRenderers().add(new PopulationRenderer(Population));
         ((BestBrainRenderer)BrainView.getRenderers().get(0)).setPopulation(Population);
 
     }
 
+    // Daten zurücksetzen
     private void resetData(){
         energyDistributionMap.getData().clear();
         energyDistributionCreature.getData().clear();
@@ -196,22 +216,25 @@ public class DashboardView {
         creaturesPerGenerationSeries.getData().clear();
     }
 
+    // Weltansicht anzeigen oder verstecken
     @FXML private void setWorldVisibility(){
         WorldView.setVisible(toggleWorldView.isSelected());
     }
 
+    // Simulation beschleunigen oder in Echtzeit laufen lassen
     @FXML private void setFastForward(){
         if (SimulationThread != null){
             SimulationThread.setRealTime(!toggleFastForward.isSelected());
         }
     }
 
+    // "Bestes Gehirn" anzeigen oder verstecken
     @FXML private void setBrainVisibility(){
         BrainView.setVisible(toggleBrainView.isSelected());
     }
 
+    // Aufräumen - Objekte "zerstören" und Programm kontrolliert schließen
     public void Shutdown(){
-        // Aufräumen - Objekte "zerstören" und Programm kontrolliert schließen
         mainTimer.cancel();
         mainTimer = null;
 

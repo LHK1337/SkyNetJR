@@ -1,3 +1,8 @@
+/*
+* Helferklasse für ein zufälliges Rauschen
+* Aus dem Rauschen wird später die Welt erzeugt.
+* */
+
 package SkyNetJR.Utils;
 
 import SkyNetJR.VirtualWorld.GenerationInfo;
@@ -5,6 +10,7 @@ import SkyNetJR.VirtualWorld.GenerationInfo;
 import java.util.Random;
 
 public class ValueNoise2D {
+    // Eigenschaften
     public final int WIDTH;
     public final int HEIGHT;
 
@@ -41,20 +47,7 @@ public class ValueNoise2D {
         random = new Random(Seed);
     }
 
-    private static double CosineInterpolate(double a, double b, double t) {
-        double t2;
-        t2 = (1.0d - Math.cos(t * Math.PI)) / 2.0d;
-        return (a * (1.0d - t2) + b * t2);
-    }
-
-    private static double LinearInterpolate(double a, double b, double t) {
-        return (a * (1 - t) + b * t);
-    }
-
-    public double[][] getHeightMap() {
-        return heightMap;
-    }
-
+    // Noise berechnen
     public void Calculate() {
         int currentFreqX = StartFrequencyX;
         int currentFreqY = StartFrequencyY;
@@ -94,6 +87,7 @@ public class ValueNoise2D {
         normalize();
     }
 
+    // Werte normalisieren
     private void normalize() {
         double min = Double.MAX_VALUE;
 
@@ -126,7 +120,24 @@ public class ValueNoise2D {
         }
     }
 
+    // Methoden zum Interpolieren
     private double interpolate(double a, double b, double t) {
         return CosineInterpolate(a, b, t);
+        //return LinearInterpolate(a, b, t);
+    }
+
+    private static double CosineInterpolate(double a, double b, double t) {
+        double t2;
+        t2 = (1.0d - Math.cos(t * Math.PI)) / 2.0d;
+        return (a * (1.0d - t2) + b * t2);
+    }
+
+    private static double LinearInterpolate(double a, double b, double t) {
+        return (a * (1 - t) + b * t);
+    }
+
+    // Getter
+    public double[][] getHeightMap() {
+        return heightMap;
     }
 }

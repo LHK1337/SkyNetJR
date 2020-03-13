@@ -1,9 +1,14 @@
+/*
+* Diese Klasse NeuralProperty<T> ist eine Schnittstelle zwischen einer Eigenschaft einer Kreatur und einem Neuronalen Netz.
+* Sie kann als Eingang oder als Ausgang verwendet werden.
+* */
+
 package SkyNetJR.AI;
 
 public class NeuralProperty<T> {
-    private T Value;
-    private NeuralPropertyType Type;
-    private Byte Tag;
+    private T Value;                    // Wert der gebundene Eigenschaft
+    private NeuralPropertyType Type;    // Type der Eigenschaft
+    private Byte Tag;                   // Erweiterung zur Identifikation der Eigenschaft
 
     public NeuralProperty(NeuralPropertyType t){
         Type = t;
@@ -22,6 +27,7 @@ public class NeuralProperty<T> {
         Value = value;
     }
 
+    // Getter und Setter
     public T getValue(){
         return Value;
     }

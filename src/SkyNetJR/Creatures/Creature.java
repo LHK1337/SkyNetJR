@@ -1,3 +1,7 @@
+/*
+* Beschreibt die Logik der Kreaturen
+* */
+
 package SkyNetJR.Creatures;
 
 import SkyNetJR.AI.NeuralNetwork;
@@ -13,11 +17,19 @@ import java.util.List;
 import java.util.Random;
 
 public class Creature {
+    // Eigenschaften der Kreatur
     private double Energy;
     private double Age;
     private double EnergyOnCurrentTile;
     private boolean CurrentTileWater;
+    private long Generation;
+    private double PositionX;
+    private double PositionY;
+    private double Rotation;
+    private boolean destroyed;
+    private boolean inhibit;
 
+    //// Schnittstellen zwischen Eigenschaften und Gehirn der Kreatur
     // Sensing
     private NeuralProperty<Double> NeuralInEnergy;
     private NeuralProperty<Double> NeuralInAge;
@@ -29,68 +41,63 @@ public class Creature {
     private NeuralProperty<Double> NeuralOutEat;
     private NeuralProperty<Double> NeuralOutReplicate;
 
+    // Auflistung der Fühler der Kreatur
     private List<Feeler> Feelers;
 
+    // Genidentifikation der Kreatur (eine Farbe im RGB-Farbsystem)
     private Vector3d Genetics;
 
+    // Spezieller Alterungskoeffizient der Zelle (beeinflusst den Alterungsprozess der Kreatur)
     private double SpecificAgingFactor;
 
-    private long Generation;
-    private double PositionX;
-    private double PositionY;
-    private double Rotation;
+    // Referenzen
+    private Population Population;  // aktuelle Population
+    private NeuralNetwork brain;    // Gehirn der Kreatur
 
-    private Population Population;
-
-    private NeuralNetwork brain;
-
-    private boolean destroyed;
-    private boolean inhibit;
-
+    // Legt fest, ob die Kreatur gerendert werden soll
     private boolean _draw;
 
-    public boolean getDraw(){
-        return _draw;
-    }
-    public void setDraw(boolean value){
-        _draw = value;
-    }
-
+    //// Konstruktoren neuer Kreaturen
+    // Rohe neue Kreatur
     private Creature() { }
 
-    public Creature(double positionX, double positionY, Population population){
+    // Neue Kreatur einer Population an einer bestimmten Position
+    public Creature(double positionX, double positionY, Population population) {
         this(positionX, positionY, 0, population);
     }
 
+    // Neue Kreatur einer Population und Generation an einer bestimmten Position
     public Creature(double positionX, double positionY, long generation, Population population) {
         Population = population;
         Generation = generation;
 
-        SetDefaults();
-        InitNewBrain();
+        SetDefaults();      // Standartwerte setzen
+        InitNewBrain();     // Neues Gehin initialisieren
 
-        AddFeeler();
+        AddFeeler();        // Ersten Fühler hinzufügen
 
         PositionX = positionX;
         PositionY = positionY;
 
-        RandomizeGenetics();
+        RandomizeGenetics();    // Zufällige Genidentifikation generieren
     }
 
+    // Neue Kreatur mit Vererbung einer Parentalkreatur
     public Creature(Creature parent){
         inhibit = true;
         Generation = parent.Generation + 1;
         Population = parent.Population;
-        SetDefaults();
-        InheritFromParent(parent);
+        SetDefaults();              // Standartwerte setzen
+        InheritFromParent(parent);  // Gehirn vererben
 
-        Genetics = new Vector3d(parent.Genetics.x, parent.Genetics.y, parent.Genetics.z);
+        Genetics = new Vector3d(parent.Genetics.x, parent.Genetics.y, parent.Genetics.z);   // Genidentifikation übernehemn
 
-        MutateGenetics();
-        MutateFeelers();
-        MutateBrain();
+        MutateGenetics();   // Genidentifikation mutieren
+        MutateFeelers();    // Anzahl der Fühöer mutieren
+        MutateBrain();      // Gehirn mutieren
     }
 
+    // Eigenschaften einer Parentalgeneration vererben
     private void InheritFromParent(Creature parent){
         Energy = Settings.CreatureSettings.EnergyDrainPerReplication;
         PositionX = parent.PositionX;
@@ -110,6 +117,7 @@ public class Creature {
         LinkBrainFromParent(ins, outs);
     }
 
+    // Eigenes Gehirn der Kreatur ähnlich der Parentalkreatur mit "Muskeln" verbinden
     private void LinkBrainFromParent(NeuralProperty[] ins, NeuralProperty[] outs){
         for (NeuralProperty in : ins) {
             switch (in.getType()) { case Bias: break;
@@ -138,13 +146,16 @@ public class Creature {
         }
     }
 
+    // Neues Gehirn initialisieren
     private void InitNewBrain(){
         brain = new NeuralNetwork();
 
+        // Zufällige Anzahl an versteckten Schichten erstellen
         for (int i = 0; i < Settings.CreatureSettings.BaseHiddenNeuronLayers; i++) {
             brain.AddHiddenLayer(new Random().nextInt(Settings.CreatureSettings.MutationRates.MaxHiddenNeuronsPerLayer - Settings.CreatureSettings.MutationRates.MinHiddenNeuronsPerLayer) + Settings.CreatureSettings.MutationRates.MinHiddenNeuronsPerLayer, false);
         }
 
+        // Eingänge und ausgänge verbinden
         brain.AddInput(NeuralInEnergy, false);
         brain.AddInput(NeuralInAge, false);
         if (Settings.CreatureSettings.CanFeelOnBody)
@@ -157,10 +168,11 @@ public class Creature {
         brain.AddOutput(NeuralOutForward, false);
         brain.AddOutput(NeuralOutEat, false);
 
-        // one add to trigger net rebuild;
+        // beim letzten Eintrag rebuild = true, damit die Gewichtsmatrizen erneuert werden
         brain.AddOutput(NeuralOutReplicate, true);
     }
 
+    // Standartwerte laden und Objekte initialisieren
     private void SetDefaults(){
         _draw = true;
 
@@ -187,11 +199,13 @@ public class Creature {
         SpecificAgingFactor = 1 + (new Random().nextDouble() * Settings.CreatureSettings.AgingVariance);
     }
 
+    // Zufällige Genidentifikation generieren
     private void RandomizeGenetics(){
         Random r = new Random();
         Genetics = new Vector3d(r.nextDouble(), r.nextDouble(), r.nextDouble());
     }
 
+    // Genidentifikation mutieren
     private void MutateGenetics(){
         Random r = new Random();
         Genetics.x += (r.nextDouble() * 2 * Settings.CreatureSettings.MutationRates.Genetics) - Settings.CreatureSettings.MutationRates.Genetics;
@@ -204,6 +218,7 @@ public class Creature {
         if (Genetics.z > 1) Genetics.z = 1; else if (Genetics.z < 0) Genetics.z = 0;
     }
 
+    // Fühler mutieren
     private void MutateFeelers(){
         Random r = new Random();
 
@@ -221,6 +236,7 @@ public class Creature {
         }
     }
 
+    // Gehirn mutieren
     private void MutateBrain(){
         Random r = new Random();
 
@@ -240,6 +256,7 @@ public class Creature {
         brain.Mutate(Settings.CreatureSettings.MutationRates.Weights);
     }
 
+    // Fühler hinzufügen
     private void AddFeeler(){
         Feeler f = new Feeler((byte)Feelers.size());
         Feelers.add(f);
@@ -250,6 +267,7 @@ public class Creature {
         LinkFeeler(f);
     }
 
+    // Fühler mit Gehirn verbinden
     private void LinkFeeler(Feeler f){
         brain.AddInput(f.NeuralInFeelsWater, false);
         brain.AddInput(f.NeuralInEnergyValueFeeler, false);
@@ -257,6 +275,7 @@ public class Creature {
         brain.AddOutput(f.Length, true);
     }
 
+    // Fühler entfernen
     private void RemoveFeeler(){
         Feeler f = Feelers.get(Feelers.size() - 1);
         Feelers.remove(f);
@@ -267,6 +286,7 @@ public class Creature {
         brain.RemoveOutput(f.Length, true);
     }
 
+    // Umwelt der Kreatur wahrnehmen
     public void Sense(){
         // Energy
         NeuralInEnergy.setValue((2 * Energy / Settings.CreatureSettings.BaseEnergy) - 1);
@@ -303,6 +323,7 @@ public class Creature {
         }
     }
 
+    // Entsprechend der Ausgänge des Gehirns reagieren
     public void Act(double deltaTime) {
         if (inhibit) {
             inhibit = false;
@@ -313,11 +334,13 @@ public class Creature {
         Age += ((deltaTime / 1000));
 
         // Constant Energy Cost
+        Energy -= (Settings.CreatureSettings.EnergyDrainPerSecond * deltaTime / 1000);
         Energy -= (Settings.CreatureSettings.AgeEnergyDrainPerSecond * SpecificAgingFactor * (Math.pow(Age, 2)) * deltaTime / 1000);
         if (CurrentTileWater)
             Energy -= (Settings.CreatureSettings.EnergyDrainOnWaterPerSecond * deltaTime / 1000);
 
         // Fat index
+        // Je mehr Energie die Kreatur besitzt, desto mehr Energie verbraucht sie im Grundumsatz (vgl. Übergewicht)
         if (Energy > Settings.CreatureSettings.BaseEnergy){
             Energy -= ((1/Settings.CreatureSettings.AllowedFatness) * (Energy - Settings.CreatureSettings.BaseEnergy)) / 1000;
         }
@@ -369,19 +392,12 @@ public class Creature {
             Destroy();
     }
 
-    private void Destroy() {
-        brain.Destroy();
-        Feelers.clear();
-
-        Population.RemoveCreature(this);
-
-        destroyed = true;
-    }
-
+    // Kreatur replizieren
     private void Replicate(){
         Population.AddCreature(new Creature(this));
     }
 
+    // Getter und Setter
     public NeuralNetwork getBrain() { return brain; }
 
     public double getRotation(){
@@ -449,5 +465,22 @@ public class Creature {
 
     public boolean inhibits(){
         return inhibit;
+    }
+
+    public boolean getDraw(){
+        return _draw;
+    }
+    public void setDraw(boolean value){
+        _draw = value;
+    }
+
+    // Kreatur zerstören und Arbeitspeicher aufräumen
+    private void Destroy() {
+        brain.Destroy();
+        Feelers.clear();
+
+        Population.RemoveCreature(this);
+
+        destroyed = true;
     }
 }

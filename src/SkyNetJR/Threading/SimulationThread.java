@@ -1,16 +1,22 @@
+/*
+* Beinhaltet den Hauptthread der Simulation
+* */
+
 package SkyNetJR.Threading;
 
 import SkyNetJR.Creatures.Population;
-import SkyNetJR.Utils.Timer;
+import SkyNetJR.Utils.Stopwatch;
 import SkyNetJR.VirtualWorld.VirtualWorld;
 
 import java.util.Stack;
 import java.util.concurrent.*;
 
 public class SimulationThread extends DestroyableThread {
+    // Simulationselemente
     private VirtualWorld _world;
     private Population _population;
 
+    // Eigenschaften der Simulation
     private long _timePrecision;
     private long _lastSimulationTime;
     private boolean _started;
@@ -18,18 +24,6 @@ public class SimulationThread extends DestroyableThread {
     private boolean _multiThread;
     private ExecutorService _threadPool;
     private int _threadPoolSize;
-
-    public long getTimePrecision() { return _timePrecision; }
-    public long getLastSimulationTime(){
-        return _lastSimulationTime;
-    }
-    public boolean isStarted() { return _started; }
-    public boolean isRealTime() { return _realTime; }
-    public boolean isMultiThreaded() { return _multiThread; }
-
-    public void setTimePrecision(long v) { _timePrecision = v; }
-    public void setRealTime(boolean v) { _realTime = v; }
-
 
     public SimulationThread(VirtualWorld world, Population population, long timePrecision, boolean multiThread, boolean realTime) {
         _world = world;
@@ -48,17 +42,18 @@ public class SimulationThread extends DestroyableThread {
         this(world, population, timePrecision, multiThread, true);
     }
 
-
+    // Einstiegspunkt des Threads
     @Override
     public void run() {
+        // Thread benennen
         Thread.currentThread().setName("SkyNetJR.MainSimulationThread");
 
-        Timer realTimeTimer = new Timer();
+        Stopwatch realTimeStopwatch = new Stopwatch();
 
         while (!ShouldExit()){
-            realTimeTimer.start();
+            realTimeStopwatch.start();
 
-            // update world
+            // Virtuelle Welt berechnen
             if (!_multiThread || _threadPool != null)
                 _world.getTileMap().Update(_timePrecision);
             else {
@@ -80,16 +75,19 @@ public class SimulationThread extends DestroyableThread {
                     }
                 }
             }
-            _world.setLastSimulationTime(realTimeTimer.getCurrentTime());
+            _world.setLastSimulationTime(realTimeStopwatch.getCurrentTime());
 
             if (ShouldExit()) break;
 
-            // update creatures
+            // Population berechnen
             _population.Update(_timePrecision, _multiThread, _threadPool);
-            _population.setLastSimulationTime(realTimeTimer.getCurrentTime());
+            _population.setLastSimulationTime(realTimeStopwatch.getCurrentTime());
 
-            realTimeTimer.end();
-            _lastSimulationTime = realTimeTimer.getTotalTime();
+            // Berechnungszeit ermitteln
+            realTimeStopwatch.end();
+            _lastSimulationTime = realTimeStopwatch.getTotalTime();
+
+            // Falls Berechnung in Echtzeit verlaufen soll aber schneller als reale Zeit ist, wartet der Thread die Differenz
             if (_realTime && _timePrecision - _lastSimulationTime > 0) {
                 try {
                     Thread.sleep(_timePrecision - _lastSimulationTime);
@@ -100,6 +98,7 @@ public class SimulationThread extends DestroyableThread {
         }
     }
 
+    // Startet den Thread
     @Override
     public synchronized void start() {
         _started = true;
@@ -107,6 +106,20 @@ public class SimulationThread extends DestroyableThread {
         super.start();
     }
 
+    // Getter und Setter
+    public long getTimePrecision() { return _timePrecision; }
+    public void setTimePrecision(long v) { _timePrecision = v; }
+
+    public long getLastSimulationTime(){ return _lastSimulationTime; }
+
+    public boolean isStarted() { return _started; }
+
+    public boolean isRealTime() { return _realTime; }
+    public void setRealTime(boolean v) { _realTime = v; }
+
+    public boolean isMultiThreaded() { return _multiThread; }
+
+    // Zerstört Thread und räumt Arbeitspeicher auf
     @Override
     public void Destroy() {
         super.Destroy();

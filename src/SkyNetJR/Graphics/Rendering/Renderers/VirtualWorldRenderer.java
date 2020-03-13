@@ -1,3 +1,7 @@
+/*
+* Klasse zum Rendern der Virtuellen Welt
+* */
+
 package SkyNetJR.Graphics.Rendering.Renderers;
 
 import SkyNetJR.Graphics.Rendering.Renderer;
@@ -21,6 +25,7 @@ public class VirtualWorldRenderer extends Renderer {
 
         TileMap map = world.getTileMap();
 
+        // Ozean zeichnen
         GL11.glColor3d(Settings.WorldSettings.WaterColor.x, Settings.WorldSettings.WaterColor.y, Settings.WorldSettings.WaterColor.z);
         GL11.glBegin(GL11.GL_QUADS);
         GL11.glVertex2i(offsetX, offsetY);
@@ -29,6 +34,7 @@ public class VirtualWorldRenderer extends Renderer {
         GL11.glVertex2i(offsetX, offsetY + (map.getHeight() * map.getTileSize()));
         GL11.glEnd();
 
+        // Land zeichnen
         Tile[][] t = map.getTiles();
 
         for (int x = 0; x < t.length; x++) {
@@ -41,6 +47,7 @@ public class VirtualWorldRenderer extends Renderer {
 
                     TileType[] n = TileMap.GetNeighbourTypes(t, x, y);
 
+                    // Land zeichnen
                     if (n[0] == TileType.Water && n[1] == TileType.Water && n[2] == TileType.Land && n[3] == TileType.Land) {
                         GL11.glBegin(GL11.GL_TRIANGLES);
                         GL11.glVertex2i(offsetX + ((x + 1) * map.getTileSize()), offsetY + (y * map.getTileSize()));
@@ -79,16 +86,14 @@ public class VirtualWorldRenderer extends Renderer {
         }
     }
 
-    @Override
-    public void Destroy() {
-
-    }
-
+    // Getter und Setter
     public VirtualWorld getWorld() {
         return world;
     }
-
     public void setWorld(VirtualWorld world) {
         this.world = world;
     }
+
+    @Override
+    public void Destroy() { }
 }

@@ -1,3 +1,7 @@
+/*
+* Basisklasse, die Zerstörbarkeit für Threads vererbt
+* */
+
 package SkyNetJR.Threading;
 
 public abstract class DestroyableThread extends Thread {
@@ -9,6 +13,7 @@ public abstract class DestroyableThread extends Thread {
         destroy = false;
     }
 
+    // Ermittelt, ob Thread beendet werden soll
     protected boolean ShouldExit(){
         if (destroy) {
             synchronized (destroyedHandle) {
@@ -18,10 +23,16 @@ public abstract class DestroyableThread extends Thread {
         }else return false;
     }
 
+    // Getter
+    public Object getDestroyedHandle() {
+        return destroyedHandle;
+    }
+
+    // Thread anhalten und zerstören
     public void Destroy() {
         destroy = true;
 
-        // detect self destroy and prevent deadlock
+        // Deadlock durch Selbstzerstörung verhindern
         if (Thread.currentThread().getId() == this.getId())
             return;
 
@@ -37,9 +48,5 @@ public abstract class DestroyableThread extends Thread {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-    }
-
-    public Object getDestroyedHandle() {
-        return destroyedHandle;
     }
 }

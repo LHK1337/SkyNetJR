@@ -1,3 +1,7 @@
+/*
+* Einstiegspunkt des Projektes
+* */
+
 package SkyNetJR.Main.MainFx;
 
 import SkyNetJR.Main.MainFx.fxml.DashboardView.DashboardView;
@@ -17,6 +21,8 @@ public class MainFx extends Application {
 
     @Override
     public void start(Stage primaryStage) {
+        // JavaFX Ansicht initialisieren
+        // GUI und Design aus der eingebetteten Datei "fxml/DashboardView/DashboardView.fxml" laden
         FXMLLoader loader = new FXMLLoader(getClass().getResource("fxml/DashboardView/DashboardView.fxml"));
         Parent root = null;
         try {
