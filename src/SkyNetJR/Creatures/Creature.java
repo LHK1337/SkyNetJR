@@ -4,13 +4,10 @@ import SkyNetJR.AI.NeuralNetwork;
 import SkyNetJR.AI.NeuralProperty;
 import SkyNetJR.AI.NeuralPropertyType;
 import SkyNetJR.Settings;
-import SkyNetJR.Util;
 import SkyNetJR.VirtualWorld.Tile;
 import SkyNetJR.VirtualWorld.TileType;
 import org.joml.Vector3d;
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -452,95 +449,5 @@ public class Creature {
 
     public boolean inhibits(){
         return inhibit;
-    }
-
-    public byte[] serialize() {
-        List<Byte> bytes = new ArrayList<>();
-
-        byte[] fixedSizeValuesBytes = new byte[Double.BYTES * 9 + Long.BYTES + Integer.BYTES];
-        ByteBuffer fixedSizeValuesBuffer = ByteBuffer.wrap(fixedSizeValuesBytes);
-
-        fixedSizeValuesBuffer.putDouble(Energy);
-        fixedSizeValuesBuffer.putDouble(Age);
-        fixedSizeValuesBuffer.putDouble(PositionX);
-        fixedSizeValuesBuffer.putDouble(PositionY);
-        fixedSizeValuesBuffer.putDouble(Rotation);
-        fixedSizeValuesBuffer.putDouble(SpecificAgingFactor);
-        fixedSizeValuesBuffer.putDouble(Genetics.x);
-        fixedSizeValuesBuffer.putDouble(Genetics.y);
-        fixedSizeValuesBuffer.putDouble(Genetics.z);
-        fixedSizeValuesBuffer.putLong(Generation);
-        fixedSizeValuesBuffer.putInt(Feelers.size());
-
-        for (byte b : fixedSizeValuesBytes) bytes.add(b);
-
-        for (byte b : brain.serialize()) bytes.add(b);
-
-        return Util.ByteListToByteArray(bytes);
-    }
-
-    public static Creature Deserialize(byte[] bytes, Population p) throws IOException {
-        Creature c = new Creature();
-        c.Population = p;
-        c._draw = true;
-
-        c.EnergyOnCurrentTile = 0d;
-        c.CurrentTileWater = false;
-        c.inhibit = true;
-
-        if (bytes.length < Double.BYTES * 9 + Long.BYTES + Integer.BYTES)
-            throw new IOException("Corrupted Creature header");
-
-        ByteBuffer byteBuffer = ByteBuffer.wrap(bytes);
-
-        c.Energy = byteBuffer.getDouble();
-        c.Age = byteBuffer.getDouble();
-        c.PositionX = byteBuffer.getDouble();
-        c.PositionY = byteBuffer.getDouble();
-        c.Rotation = byteBuffer.getDouble();
-        c.SpecificAgingFactor = byteBuffer.getDouble();
-        c.Genetics = new Vector3d();
-        c.Genetics.x = byteBuffer.getDouble();
-        c.Genetics.y = byteBuffer.getDouble();
-        c.Genetics.z = byteBuffer.getDouble();
-        c.Generation = byteBuffer.getLong();
-        int feelerCount =  byteBuffer.getInt();
-
-        c.Feelers = new ArrayList<>();
-        for (int i = 0; i < feelerCount; i++) {
-            c.Feelers.add(new Feeler((byte)i));
-        }
-
-        byte[] neuralNetworkBytes = new byte[bytes.length - (Double.BYTES * 9 + Long.BYTES + Integer.BYTES)];
-        ByteBuffer brainBuffer = byteBuffer.get(neuralNetworkBytes);
-
-        c.brain = NeuralNetwork.Deserialize(neuralNetworkBytes);
-
-        for (NeuralProperty in : c.brain.getInputs()){
-            switch (in.getType()) { case Bias: break;
-                case EnergySelf: c.NeuralInEnergy = in; in.setValue(c.Energy); break;
-                case Age: c.NeuralInAge = in; in.setValue(c.Age); break;
-                case EnergyOnCurrentTile: c.NeuralInEnergyOnCurrentTile = in; in.setValue(0d); break;
-                case CurrentTileWater: c.NeuralInCurrentTileWater = in; in.setValue(0d); break;
-
-                // Feelers
-                case FeelsWater: c.Feelers.get(in.getTag()).NeuralInFeelsWater = in; in.setValue(0d); break;
-                case EnergyValueFeeler: c.Feelers.get(in.getTag()).NeuralInEnergyValueFeeler = in; in.setValue(0d); break;
-            }
-        }
-        for (NeuralProperty out : c.brain.getOutputs()) {
-            switch (out.getType()) {
-                case Rotate: c.NeuralOutRotation = out; out.setValue(0d); break;
-                case Forward: c.NeuralOutForward = out; out.setValue(0d); break;
-                case Eat: c.NeuralOutEat = out; out.setValue(0d); break;
-                case Replicate: c.NeuralOutReplicate = out; out.setValue(0d); break;
-
-                //Feelers
-                case FeelerAngle: c.Feelers.get(out.getTag()).Angle = out; out.setValue(0d); break;
-                case FeelerLength: c.Feelers.get(out.getTag()).Length = out; out.setValue(0d); break;
-            }
-        }
-
-        return c;
     }
 }

@@ -15,7 +15,6 @@
       <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
   </rowConstraints>
    <children>
-      <PieChart fx:id="geneDistribution" />
       <BarChart fx:id="creaturesPerGeneration" animated="false" categoryGap="2.0" legendVisible="false" title="Kreaturen pro Generation" GridPane.columnSpan="2">
         <xAxis>
           <CategoryAxis side="BOTTOM" />

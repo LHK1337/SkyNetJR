@@ -1,9 +1,7 @@
 package SkyNetJR.AI;
 
 import SkyNetJR.Settings;
-import SkyNetJR.Util;
 
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -271,109 +269,5 @@ public class NeuralNetwork {
         Outputs.clear();
         HiddenLayerNeurons.clear();
         Weights.clear();
-    }
-
-    public byte[] serialize() {
-        List<Byte> bytes = new ArrayList<>();
-
-        byte[] intBytes = new byte[Integer.BYTES * (3 + 2 * (Inputs.size() + Outputs.size()) + HiddenLayerNeurons.size() + 1 + 2 * Weights.size()) + Double.BYTES * (Inputs.size() + Outputs.size())];
-        ByteBuffer byteBuffer = ByteBuffer.wrap(intBytes);
-
-        int totalDoubles = 0;
-        for (double[][] ddd : Weights) {
-            totalDoubles += ddd.length * ddd[0].length;
-        }
-
-        byte[] doubleBytes = new byte[Double.BYTES * totalDoubles];
-        ByteBuffer doubleBuffer = ByteBuffer.wrap(doubleBytes);
-
-        byteBuffer.putInt(Inputs.size());
-        byteBuffer.putInt(Outputs.size());
-        byteBuffer.putInt(HiddenLayerNeurons.size());
-
-        for (NeuralProperty<Double> p : Inputs){
-            byteBuffer.put(p.getType().getValue());
-            byteBuffer.put(p.getTag());
-            byteBuffer.putDouble(p.getValue() == null ? 0 : p.getValue());
-
-        }
-
-        for (NeuralProperty<Double> p : Outputs){
-            byteBuffer.put(p.getType().getValue());
-            byteBuffer.put(p.getTag());
-            byteBuffer.putDouble(p.getValue() == null ? 0 : p.getValue());
-        }
-
-        for (int i : HiddenLayerNeurons) byteBuffer.putInt(i);
-
-        byteBuffer.putInt(Weights.size());
-
-        for (double[][] ddd : Weights) {
-            byteBuffer.putInt(ddd.length);
-            byteBuffer.putInt(ddd[0].length);
-
-            for (double[] dd : ddd){
-                for (double d : dd)
-                    doubleBuffer.putDouble(d);
-            }
-        }
-
-        for (byte b : intBytes) bytes.add(b);
-        for (byte b : doubleBytes) bytes.add(b);
-
-        return Util.ByteListToByteArray(bytes);
-    }
-
-    private NeuralNetwork(byte[] bytes){
-        Destroyed = false;
-        Inputs = new ArrayList<>();
-        Outputs = new ArrayList<>();
-        Weights = new ArrayList<>();
-        HiddenLayerNeurons = new ArrayList<>();
-        HiddenNeuronActivities = new ArrayList<>();
-
-        ByteBuffer byteBuffer = ByteBuffer.wrap(bytes);
-
-        int inputCount = byteBuffer.getInt();
-        int outputCount = byteBuffer.getInt();
-        int hiddenLayerNeuronsCount = byteBuffer.getInt();
-
-        for (int i = 0; i < inputCount * 2; i += 2) {
-            Inputs.add(new NeuralProperty(NeuralPropertyType.FromByte(byteBuffer.get()), byteBuffer.get()));
-            Inputs.get(Inputs.size() - 1).setValue(byteBuffer.getDouble());
-        }
-
-        for (int i = 0; i < outputCount * 2; i += 2) {
-            Outputs.add(new NeuralProperty(NeuralPropertyType.FromByte(byteBuffer.get()), byteBuffer.get()));
-            Outputs.get(Outputs.size() - 1).setValue(byteBuffer.getDouble());
-        }
-
-        for (int i = 0; i < hiddenLayerNeuronsCount; i++) {
-            HiddenLayerNeurons.add(byteBuffer.getInt());
-        }
-
-        int weightMatrices = byteBuffer.getInt();
-        for (int i = 0; i < weightMatrices; i++) {
-            int x = byteBuffer.getInt();
-            int y = byteBuffer.getInt();
-
-            Weights.add(new double[x][]);
-            double[][] w = Weights.get(Weights.size() - 1);
-            for (int i1 = 0, wLength = w.length; i1 < wLength; i1++) {
-                w[i1] = new double[y];
-            }
-        }
-
-        for (double[][] weight : Weights) {
-            for (int i = 0; i < weight.length; i++) {
-                for (int j = 0; j < weight[i].length; j++) {
-                    weight[i][j] = byteBuffer.getDouble();
-                }
-            }
-        }
-    }
-
-    public static NeuralNetwork Deserialize(byte[] bytes){
-        return new NeuralNetwork(bytes);
     }
 }

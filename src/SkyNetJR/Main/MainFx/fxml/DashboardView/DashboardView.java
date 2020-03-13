@@ -24,8 +24,6 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 public class DashboardView {
-    @FXML private PieChart geneDistribution;
-
     @FXML private AreaChart<Double, Double> energyDistribution;
     private AreaChart.Series<Double, Double> energyDistributionCreature;
     private AreaChart.Series<Double, Double> energyDistributionMap;
@@ -68,8 +66,6 @@ public class DashboardView {
         BrainView.setClosable(false);
         BrainView.getRenderers().add(new BestBrainRenderer(null));
         //BrainView.setVisible(true);
-
-        geneDistribution.setData(FXCollections.observableArrayList());
 
         // Energieverteilung
         energyDistributionCreature = new XYChart.Series<>(FXCollections.observableArrayList());
@@ -194,8 +190,6 @@ public class DashboardView {
     }
 
     private void resetData(){
-        geneDistribution.getData().clear();
-
         energyDistributionMap.getData().clear();
         energyDistributionCreature.getData().clear();
 
