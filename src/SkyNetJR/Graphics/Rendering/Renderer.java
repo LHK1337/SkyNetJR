@@ -5,26 +5,26 @@
 package SkyNetJR.Graphics.Rendering;
 
 public abstract class Renderer {
-    protected int positionX;
-    protected int positionY;
+    protected int _positionX;
+    protected int _positionY;
 
     // Methodenprotyp bzw. Methodenmuster
-    public abstract void Render(int offsetX, int offsetY);
+    public abstract void render(int offsetX, int offsetY);
 
     // Getter und Setter
     public int getPositionX() {
-        return positionX;
+        return _positionX;
     }
     public void setPositionX(int positionX) {
-        this.positionX = positionX;
+        this._positionX = positionX;
     }
 
     public int getPositionY() {
-        return positionY;
+        return _positionY;
     }
     public void setPositionY(int positionY) {
-        this.positionY = positionY;
+        this._positionY = positionY;
     }
 
-    public abstract void Destroy();
+    public abstract void destroy();
 }

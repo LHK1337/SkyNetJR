@@ -8,15 +8,15 @@ import SkyNetJR.AI.NeuralProperty;
 import SkyNetJR.AI.NeuralPropertyType;
 
 public class Feeler {
-    public byte Tag;    // Identifikation des Fühlers
+    public byte _tag;    // Identifikation des Fühlers
 
     public Feeler(byte tag){
-        Tag = tag;
+        _tag = tag;
 
-        NeuralInFeelsWater = new NeuralProperty<>(NeuralPropertyType.FeelsWater, Tag);
-        NeuralInEnergyValueFeeler = new NeuralProperty<>(NeuralPropertyType.EnergyValueFeeler, Tag);
-        Angle = new NeuralProperty<>(NeuralPropertyType.FeelerAngle, Tag);
-        Length = new NeuralProperty<>(NeuralPropertyType.FeelerLength, Tag);
+        NeuralInFeelsWater = new NeuralProperty<>(NeuralPropertyType.FeelsWater, _tag);
+        NeuralInEnergyValueFeeler = new NeuralProperty<>(NeuralPropertyType.EnergyValueFeeler, _tag);
+        Angle = new NeuralProperty<>(NeuralPropertyType.FeelerAngle, _tag);
+        Length = new NeuralProperty<>(NeuralPropertyType.FeelerLength, _tag);
     }
 
     // Sensing

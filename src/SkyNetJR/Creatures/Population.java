@@ -37,7 +37,7 @@ public class Population {
 
         if (t == null || t.getType() == TileType.Water || t == Tile.Void) return 0d;
 
-        return _world.getTileMap().RequestConsumeEnergy(t, value);
+        return _world.getTileMap().requestConsumeEnergy(t, value);
     }
 
     private Population(){
@@ -90,12 +90,12 @@ public class Population {
 
         for (Creature c : _creatures)
         {
-            c.Sense();
+            c.sense();
 
             if (!multiThread || threadPool == null)
-                c.getBrain().Evaluate();
+                c.getBrain().evaluate();
             else {
-                futures.push(threadPool.submit(() -> c.getBrain().Evaluate())); // think.. (multi threaded)
+                futures.push(threadPool.submit(() -> c.getBrain().evaluate())); // think.. (multi threaded)
             }
         }
 
@@ -111,7 +111,7 @@ public class Population {
 
         for (int i = 0; i < _creatures.size(); i++) {
             Creature c = _creatures.get(i);
-            c.Act(deltaTime);
+            c.act(deltaTime);
             if (c.isDestroyed()) i--;
         }
 

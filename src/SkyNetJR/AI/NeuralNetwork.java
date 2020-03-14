@@ -13,35 +13,35 @@ import java.util.List;
 import java.util.Random;
 
 public class NeuralNetwork {
-    private List<NeuralProperty> Inputs;                // Eingänge des neuronalen Netzes (Das was die Kreatur spürt bzw. wie sie ihre Umgebung wahrnimmt.)
-    private List<NeuralProperty> Outputs;               // Ausgänge des neuronalen Netzes (Kann man als Schnittstelle zu den Muskeln der Kreatur interpretieren.)
-    private List<Integer> HiddenLayerNeurons;           // Liste mit den Anzahlen an Neuronen in den versteckten Schichten des Netzes
-    private List<double[]> HiddenNeuronActivities;
+    private List<NeuralProperty> _inputs;                // Eingänge des neuronalen Netzes (Das was die Kreatur spürt bzw. wie sie ihre Umgebung wahrnimmt.)
+    private List<NeuralProperty> _outputs;               // Ausgänge des neuronalen Netzes (Kann man als Schnittstelle zu den Muskeln der Kreatur interpretieren.)
+    private List<Integer> _hiddenLayerNeurons;           // Liste mit den Anzahlen an Neuronen in den versteckten Schichten des Netzes
+    private List<double[]> _hiddenNeuronActivities;
 
-    private final Object WeightsLock = new Object();
-    private List<double[][]> Weights;                   // Gewichtsmatrizen: [outputCounts][inputCount]
+    private final Object _weightsLock = new Object();
+    private List<double[][]> _weights;                   // Gewichtsmatrizen: [outputCounts][inputCount]
                                                         // Eine Liste mit 2-dimensionalen Floatarrays, die die Wichtungen der Neuronen untereinander enthalten
 
-    private NeuralProperty<Double> bias;                // Bias => Ein Grundsignal in einem neuronalen, welches immmer aktiv ist (hier gleich 1),
+    private NeuralProperty<Double> _bias;                // Bias => Ein Grundsignal in einem neuronalen, welches immmer aktiv ist (hier gleich 1),
                                                         //         damit erzwinkt man, dass ungelernte Netze nicht nur Nullen ausgeben
                                                         // Erzwingt eine gewisse Grundaktivität
 
-    private boolean Destroyed;                          // Gibt an, ob dieses Netz bereits zerstört, also nicht mehr in Verwendung ist.
+    private boolean _destroyed;                          // Gibt an, ob dieses Netz bereits zerstört, also nicht mehr in Verwendung ist.
 
     public NeuralNetwork() {
         // Grundwerte für neue Netze festlegen und Objekte initialisieren
-        Destroyed = false;
+        _destroyed = false;
 
-        Weights = new ArrayList<>();
+        _weights = new ArrayList<>();
 
-        bias = new NeuralProperty<Double>(1d, NeuralPropertyType.Bias);
+        _bias = new NeuralProperty<Double>(1d, NeuralPropertyType.Bias);
 
-        Inputs = new ArrayList<>();
-        Inputs.add(bias);                               // Bias den Eingänge hinzufügen
+        _inputs = new ArrayList<>();
+        _inputs.add(_bias);                               // Bias den Eingänge hinzufügen
 
-        Outputs = new ArrayList<>();
-        HiddenLayerNeurons = new ArrayList<>();
-        HiddenNeuronActivities = new ArrayList<>();
+        _outputs = new ArrayList<>();
+        _hiddenLayerNeurons = new ArrayList<>();
+        _hiddenNeuronActivities = new ArrayList<>();
     }
 
     // Konstruktor, um eine Kopie eines Netzes zu erstellen
@@ -49,22 +49,22 @@ public class NeuralNetwork {
         this();
 
         // Gewichte des Parentalnetzes übernehmen
-        synchronized (this.WeightsLock){
-            for (int i = 0; i < nn.Weights.size(); i++) {
-                Weights.add(nn.Weights.get(i).clone());
+        synchronized (this._weightsLock){
+            for (int i = 0; i < nn._weights.size(); i++) {
+                _weights.add(nn._weights.get(i).clone());
             }
 
             // Versteckte Schichten übernehmen
-            this.HiddenLayerNeurons.addAll(nn.HiddenLayerNeurons);
+            this._hiddenLayerNeurons.addAll(nn._hiddenLayerNeurons);
         }
     }
 
     // Ermittelt Schicht im neuronalen Netz mit den meisten Neuronen
     private int getHighestNeuronCount() {
-        int i = Inputs.size();
+        int i = _inputs.size();
 
-        if (Outputs.size() > i) i = Outputs.size();
-        for (Integer n: HiddenLayerNeurons){
+        if (_outputs.size() > i) i = _outputs.size();
+        for (Integer n: _hiddenLayerNeurons){
             if (n > i) i = n;
         }
 
@@ -82,23 +82,23 @@ public class NeuralNetwork {
     public static double Sigmoid(double x) { return (1/( 1 + Math.pow(Math.E,(-1*x)))); }   // Sigmoid Funktion
 
     // Funktion, die die aktuellen Ausgänge des Netzes berechnet
-    public void Evaluate(){
-        if (Destroyed) return;  // zerstörte Netze nicht mehr berechnen
+    public void evaluate(){
+        if (_destroyed) return;  // zerstörte Netze nicht mehr berechnen
 
-        HiddenNeuronActivities.clear();
+        _hiddenNeuronActivities.clear();
         double[][] v = new double[getHighestNeuronCount()][2];  // Array entspricht zwei Vektoren, die in der folgenden Matrixmultiplikation Sumnad und Produkt enthalten
                                                                 // Vektor(mit Ergebnissen der letzten Schicht) x Gewichtsmatrix(dieser Schicht) = Vektor(Ergebnisse dieser Schicht)
                                                                 // v1 x m = v2
 
         // Eingabe des Netzes als Ausgangswerte der ersten Schicht verwenden
-        for (int i = 0; i < Inputs.size(); i++) {
-            v[i][0] = (double) Inputs.get(i).getValue();
+        for (int i = 0; i < _inputs.size(); i++) {
+            v[i][0] = (double) _inputs.get(i).getValue();
         }
 
         // Implementation der Matrixmultiplikation
-        for (int i = 0; i < Weights.size(); i++) {
-            double[][] layer = Weights.get(i);
-            HiddenNeuronActivities.add(new double[layer.length]);
+        for (int i = 0; i < _weights.size(); i++) {
+            double[][] layer = _weights.get(i);
+            _hiddenNeuronActivities.add(new double[layer.length]);
 
             for (int j = 0; j < layer.length; j++) {
                 v[j][1] = 0;
@@ -109,119 +109,119 @@ public class NeuralNetwork {
 
             for (int j = 0; j < layer.length; j++) {
                 v[j][0] = ActivationFunction(v[j][1]);
-                HiddenNeuronActivities.get(HiddenNeuronActivities.size() - 1)[j] = v[j][0];
+                _hiddenNeuronActivities.get(_hiddenNeuronActivities.size() - 1)[j] = v[j][0];
             }
         }
 
         // Ergebnisse der letztem Schicht in die Ausgänge des neuronalen Netzes schreiben
-        for (int j = 0; j < Outputs.size(); j++) {
-            Outputs.get(j).setValue(v[j][0]);
+        for (int j = 0; j < _outputs.size(); j++) {
+            _outputs.get(j).setValue(v[j][0]);
         }
     }
 
     // Implementation der Mutation
-    public void Mutate(double mutationRate){
+    public void mutate(double mutationRate){
         Random r = new Random();
 
         int i,j,k;
 
-        i = r.nextInt(Weights.size());
-        j = r.nextInt(Weights.get(i).length);
-        k = r.nextInt(Weights.get(i)[j].length);
+        i = r.nextInt(_weights.size());
+        j = r.nextInt(_weights.get(i).length);
+        k = r.nextInt(_weights.get(i)[j].length);
 
         // eine zufällige Wichtung einer zufälligen Schicht geringfügig zufällig ändern
-        Weights.get(i)[j][k] += (r.nextDouble() * (2 * mutationRate)) - mutationRate;
+        _weights.get(i)[j][k] += (r.nextDouble() * (2 * mutationRate)) - mutationRate;
     }
 
     // Eine neue versteckte Schicht dem Netz hinzufügen
-    public void AddHiddenLayer(int neurons) throws IndexOutOfBoundsException {
-        AddHiddenLayer(neurons, true);
+    public void addHiddenLayer(int neurons) throws IndexOutOfBoundsException {
+        addHiddenLayer(neurons, true);
     }
-    public void AddHiddenLayer(int neurons, boolean rebuild) throws IndexOutOfBoundsException {
+    public void addHiddenLayer(int neurons, boolean rebuild) throws IndexOutOfBoundsException {
         if (neurons <= 0)
             throw new IndexOutOfBoundsException("Hidden layer neurons <= 0");
 
-        HiddenLayerNeurons.add(neurons);
+        _hiddenLayerNeurons.add(neurons);
 
-        if (rebuild) RebuildAllWeights();
+        if (rebuild) rebuildAllWeights();
     }
 
     //// Eine neue versteckte Schicht aus dem Netz entfernen
     // neuste Schicht entfernen
     public void RemoveLatestHiddenLayer() {
-        if (HiddenLayerNeurons.size() > 1)
+        if (_hiddenLayerNeurons.size() > 1)
         {
-            HiddenLayerNeurons.remove(HiddenLayerNeurons.size() - 1);
+            _hiddenLayerNeurons.remove(_hiddenLayerNeurons.size() - 1);
 
-            RebuildAllWeights();
+            rebuildAllWeights();
         }
     }
     // eine bestimmte Schicht entfernen
-    public void RemoveRandomHiddenLayer() {
-        if (HiddenLayerNeurons.size() > 1)
+    public void removeRandomHiddenLayer() {
+        if (_hiddenLayerNeurons.size() > 1)
         {
-            HiddenLayerNeurons.remove(new Random().nextInt(HiddenLayerNeurons.size()));
+            _hiddenLayerNeurons.remove(new Random().nextInt(_hiddenLayerNeurons.size()));
 
-            RebuildAllWeights();
+            rebuildAllWeights();
         }
     }
 
     // Fügt dem Netz eine Eingabe hinzu
-    public void AddInput(NeuralProperty np){
-        AddInput(np, true);
+    public void addInput(NeuralProperty np){
+        addInput(np, true);
     }
-    public void AddInput(NeuralProperty np, boolean rebuild){
-        Inputs.add(np);
-        if (rebuild) RebuildInputWeights();
+    public void addInput(NeuralProperty np, boolean rebuild){
+        _inputs.add(np);
+        if (rebuild) rebuildInputWeights();
     }
 
     // Fügt dem Netz eine Ausgabe hinzu
-    public void AddOutput(NeuralProperty np){
-        AddOutput(np, true);
+    public void addOutput(NeuralProperty np){
+        addOutput(np, true);
     }
-    public void AddOutput(NeuralProperty np, boolean rebuild){
-        Outputs.add(np);
-        if (rebuild) RebuildOutputWeights();
+    public void addOutput(NeuralProperty np, boolean rebuild){
+        _outputs.add(np);
+        if (rebuild) rebuildOutputWeights();
     }
 
     // Entfernt eine Eingabe aus dem Netz
-    public void RemoveInput(NeuralProperty np){
-        AddInput(np, true);
+    public void removeInput(NeuralProperty np){
+        addInput(np, true);
     }
-    public void RemoveInput(NeuralProperty np, boolean rebuild){
-        Inputs.remove(np);
-        if (rebuild) RebuildInputWeights();
+    public void removeInput(NeuralProperty np, boolean rebuild){
+        _inputs.remove(np);
+        if (rebuild) rebuildInputWeights();
     }
 
     // Entfernt eine Ausgabe aus dem Netz
-    public void RemoveOutput(NeuralProperty np){
-        AddOutput(np, true);
+    public void removeOutput(NeuralProperty np){
+        addOutput(np, true);
     }
-    public void RemoveOutput(NeuralProperty np, boolean rebuild){
-        Outputs.remove(np);
-        if (rebuild) RebuildOutputWeights();
+    public void removeOutput(NeuralProperty np, boolean rebuild){
+        _outputs.remove(np);
+        if (rebuild) rebuildOutputWeights();
     }
 
     // Ausgabe der Gewichte in der Konsole
-    public void PrintWeights(){
-        System.out.println("Inputs: " + Inputs.size());
-        System.out.println("Outputs:" + Outputs.size());
+    public void printWeights(){
+        System.out.println("Inputs: " + _inputs.size());
+        System.out.println("Outputs:" + _outputs.size());
 
         System.out.print("HiddenLayers: { ");
-        for (int i = 0; i < HiddenLayerNeurons.size(); i++) {
+        for (int i = 0; i < _hiddenLayerNeurons.size(); i++) {
             if (i != 0) System.out.print(", ");
-            System.out.print(HiddenLayerNeurons.get(i));
+            System.out.print(_hiddenLayerNeurons.get(i));
         }
         System.out.println(" }");
 
-        System.out.println("Layer: " + Weights.size() + " | Input + " + HiddenLayerNeurons.size() + " Hidden + Output");
+        System.out.println("Layer: " + _weights.size() + " | Input + " + _hiddenLayerNeurons.size() + " Hidden + Output");
 
-        for (int i = 0; i < Weights.size(); i++) {
-            System.out.println(Weights.get(i).length + "x" + Weights.get(i)[0].length);
+        for (int i = 0; i < _weights.size(); i++) {
+            System.out.println(_weights.get(i).length + "x" + _weights.get(i)[0].length);
 
-            for (int j = 0; j < Weights.get(i).length; j++) {
-                for (int k = 0; k < Weights.get(i)[j].length; k++) {
-                    System.out.print(Weights.get(i)[j][k] + "\t");
+            for (int j = 0; j < _weights.get(i).length; j++) {
+                for (int k = 0; k < _weights.get(i)[j].length; k++) {
+                    System.out.print(_weights.get(i)[j][k] + "\t");
                 }
                 System.out.println();
             }
@@ -231,28 +231,28 @@ public class NeuralNetwork {
     }
 
     // Matrizen zwischen den Schichten erstellen
-    private void RebuildAllWeights(){
+    private void rebuildAllWeights(){
         List<double[][]> newWeights = new ArrayList<>();
 
-        if (HiddenLayerNeurons.size() == 0) newWeights.add(new double[Outputs.size()][Inputs.size()]);
+        if (_hiddenLayerNeurons.size() == 0) newWeights.add(new double[_outputs.size()][_inputs.size()]);
         else {
-            newWeights.add(new double[HiddenLayerNeurons.get(0)][Inputs.size()]);
+            newWeights.add(new double[_hiddenLayerNeurons.get(0)][_inputs.size()]);
 
-            for (int i = 0; i < HiddenLayerNeurons.size() - 1; i++)
-                newWeights.add(new double[HiddenLayerNeurons.get(i + 1)][HiddenLayerNeurons.get(i)]);
+            for (int i = 0; i < _hiddenLayerNeurons.size() - 1; i++)
+                newWeights.add(new double[_hiddenLayerNeurons.get(i + 1)][_hiddenLayerNeurons.get(i)]);
 
-            newWeights.add(new double[Outputs.size()][HiddenLayerNeurons.get(HiddenLayerNeurons.size() - 1)]);
+            newWeights.add(new double[_outputs.size()][_hiddenLayerNeurons.get(_hiddenLayerNeurons.size() - 1)]);
         }
 
         Random r = new Random();
 
         for (int i = 0; i < newWeights.size(); i++)
-            if (i < Weights.size())
+            if (i < _weights.size())
                 for (int j = 0; j < newWeights.get(i).length; j++)
-                    if (j < Weights.get(i).length)
+                    if (j < _weights.get(i).length)
                         for (int k = 0; k < newWeights.get(i)[j].length; k++)
-                            if (k < Weights.get(i)[j].length)
-                                newWeights.get(i)[j][k] = Weights.get(i)[j][k];
+                            if (k < _weights.get(i)[j].length)
+                                newWeights.get(i)[j][k] = _weights.get(i)[j][k];
                             else
                                 newWeights.get(i)[j][k] = (r.nextDouble() * 2 * Settings.CreatureSettings.MutationRates.InitialWeightRange) - Settings.CreatureSettings.MutationRates.InitialWeightRange;
                     else
@@ -262,45 +262,45 @@ public class NeuralNetwork {
                 for (int j = 0; j < newWeights.get(i).length; j++)
                     for (int k = 0; k < newWeights.get(i)[j].length; k++) newWeights.get(i)[j][k] = (r.nextDouble() * 2 * Settings.CreatureSettings.MutationRates.InitialWeightRange) - Settings.CreatureSettings.MutationRates.InitialWeightRange;
 
-        synchronized (WeightsLock){
-            Weights.clear();
-            Weights.addAll(newWeights);
+        synchronized (_weightsLock){
+            _weights.clear();
+            _weights.addAll(newWeights);
         }
     }
-    private void RebuildInputWeights(){
-        RebuildAllWeights();
+    private void rebuildInputWeights(){
+        rebuildAllWeights();
     }
-    private void RebuildOutputWeights(){
-        RebuildAllWeights();
+    private void rebuildOutputWeights(){
+        rebuildAllWeights();
     }
 
     // Getter Funktionen
     public NeuralProperty[] getInputs(){
-        return Inputs.toArray(new NeuralProperty[0]);
+        return _inputs.toArray(new NeuralProperty[0]);
     }
     public NeuralProperty[] getOutputs(){
-        return Outputs.toArray(new NeuralProperty[0]);
+        return _outputs.toArray(new NeuralProperty[0]);
     }
 
-    public Object getWeightsLock() { return WeightsLock; }
+    public Object getWeightsLock() { return _weightsLock; }
     public List<double[][]> getWeights(){
-        return Weights;
+        return _weights;
     }
 
     public int getHiddenLayerCount() {
-        return HiddenLayerNeurons.size();
+        return _hiddenLayerNeurons.size();
     }
     public List<double[]> getHiddenNeuronActivities(){
-        return HiddenNeuronActivities;
+        return _hiddenNeuronActivities;
     }
 
     // Zerstört das Netz und räumt den Arbeitspeicher auf
-    public void Destroy() {
-        Destroyed = true;
+    public void destroy() {
+        _destroyed = true;
 
-        Inputs.clear();
-        Outputs.clear();
-        HiddenLayerNeurons.clear();
-        Weights.clear();
+        _inputs.clear();
+        _outputs.clear();
+        _hiddenLayerNeurons.clear();
+        _weights.clear();
     }
 }

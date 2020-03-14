@@ -17,18 +17,18 @@ import static org.lwjgl.opengl.GL11.*;
 public class WindowThread extends DestroyableThread {
     // Eigenschaften
     private final View view;
-    private boolean useVSync;
+    private boolean _useVSync;
     private boolean _allowClosing;
     private boolean _visible;
 
-    private long windowHandle;
-    private WindowManager windowManager;
+    private long _windowHandle;
+    private WindowManager _windowManager;
 
     private long _renderTime;
 
     public WindowThread(View view, WindowManager wm) {
         this.view = view;
-        this.windowManager = wm;
+        this._windowManager = wm;
         _allowClosing = true;
     }
 
@@ -38,15 +38,15 @@ public class WindowThread extends DestroyableThread {
         Thread.currentThread().setName("RenderThread - " + view.toString());
 
         // Fenster erstellen
-        windowHandle = windowManager.CreateNewWindow(view.getWidth(), view.getHeight(), view.getTitle(), null, view.getResizable(), true);
-        glfwSetWindowCloseCallback(windowHandle, window -> {
+        _windowHandle = _windowManager.createNewWindow(view.getWidth(), view.getHeight(), view.getTitle(), null, view.getResizable(), true);
+        glfwSetWindowCloseCallback(_windowHandle, window -> {
             glfwSetWindowShouldClose(window, this._allowClosing);
 
             if (!this._allowClosing) setVisible(false);
         });
 
         // Fensterkontext auf diesen Thread legen
-        glfwMakeContextCurrent(windowHandle);
+        glfwMakeContextCurrent(_windowHandle);
         GL.createCapabilities();
 
         // Einstellungen der Ansicht setzen
@@ -56,8 +56,8 @@ public class WindowThread extends DestroyableThread {
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-        useVSync = view.isUseVSync();
-        glfwSwapInterval(useVSync ? 1 : 0);
+        _useVSync = view.isUseVSync();
+        glfwSwapInterval(_useVSync ? 1 : 0);
 
         GL11.glMatrixMode(GL11.GL_PROJECTION);
         resizeViewPortToWindow();
@@ -66,7 +66,7 @@ public class WindowThread extends DestroyableThread {
 
         GL11.glClearColor(0f, 0f, 0f, 1f);
 
-        glfwSetWindowSizeCallback(windowHandle, (window, width, height) -> {
+        glfwSetWindowSizeCallback(_windowHandle, (window, width, height) -> {
             view.setHeight(height);
             view.setWidth(width);
             resizeViewPortToWindow();
@@ -79,9 +79,9 @@ public class WindowThread extends DestroyableThread {
             renderStopwatch.start();
 
             // Überprüft, ob sich die Ansicht schließen soll
-            if (glfwWindowShouldClose(windowHandle)) {
-                destroy = true;
-                windowManager.DestroyWindow(windowHandle);
+            if (glfwWindowShouldClose(_windowHandle)) {
+                _destroy = true;
+                _windowManager.destroyWindow(_windowHandle);
 
                 // Weiteren Thread erstellen, der den aktuellen aufräumt
                 Thread cleanUpThread = new Thread(() -> {
@@ -92,17 +92,17 @@ public class WindowThread extends DestroyableThread {
             }
 
             // Überprüfen, ob der Thread beendet werden soll
-            if (destroy) {
-                synchronized (destroyedHandle) {
-                    destroyedHandle.notifyAll();
+            if (_destroy) {
+                synchronized (_destroyedHandle) {
+                    _destroyedHandle.notifyAll();
                 }
                 return; // Thread beenden
             }
 
             // Vertikale Synchronisation einstellen
-            if (useVSync != view.isUseVSync()) {
-                useVSync = view.isUseVSync();
-                glfwSwapInterval(useVSync ? 1 : 0);
+            if (_useVSync != view.isUseVSync()) {
+                _useVSync = view.isUseVSync();
+                glfwSwapInterval(_useVSync ? 1 : 0);
             }
 
             // Ansicht leeren
@@ -112,7 +112,7 @@ public class WindowThread extends DestroyableThread {
             try {
                 for (Renderer renderer : view.getRenderers()) {
                     // Renderer ausführen
-                    renderer.Render(renderer.getPositionX(), renderer.getPositionY());
+                    renderer.render(renderer.getPositionX(), renderer.getPositionY());
                 }
             } catch (Exception e)
             {
@@ -121,7 +121,7 @@ public class WindowThread extends DestroyableThread {
             }
 
             // Anzeigebuffer wechseln
-            glfwSwapBuffers(windowHandle);
+            glfwSwapBuffers(_windowHandle);
 
             // Fensterevents abrufen
             glfwPollEvents();
@@ -152,21 +152,21 @@ public class WindowThread extends DestroyableThread {
         _visible = visible;
 
         if (visible)
-            glfwShowWindow(windowHandle);
+            glfwShowWindow(_windowHandle);
         else
-            glfwHideWindow(windowHandle);
+            glfwHideWindow(_windowHandle);
     }
 
-    public long getWindowHandle() { return windowHandle; }
+    public long getWindowHandle() { return _windowHandle; }
 
     public long getRenderTime(){
         return _renderTime;
     }
 
     @Override
-    public void Destroy() {
-        windowManager.DestroyWindow(windowHandle);
+    public void destroy() {
+        _windowManager.destroyWindow(_windowHandle);
 
-        super.Destroy();
+        super.destroy();
     }
 }

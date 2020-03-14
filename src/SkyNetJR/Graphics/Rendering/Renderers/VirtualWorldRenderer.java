@@ -13,17 +13,17 @@ import SkyNetJR.VirtualWorld.VirtualWorld;
 import org.lwjgl.opengl.GL11;
 
 public class VirtualWorldRenderer extends Renderer {
-    private VirtualWorld world;
+    private VirtualWorld _world;
 
     public VirtualWorldRenderer(VirtualWorld world) {
-        this.world = world;
+        this._world = world;
     }
 
     @Override
-    public void Render(int offsetX, int offsetY) {
-        if (!world.getDraw()) return;
+    public void render(int offsetX, int offsetY) {
+        if (!_world.getDraw()) return;
 
-        TileMap map = world.getTileMap();
+        TileMap map = _world.getTileMap();
 
         // Ozean zeichnen
         GL11.glColor3d(Settings.WorldSettings.WaterColor.x, Settings.WorldSettings.WaterColor.y, Settings.WorldSettings.WaterColor.z);
@@ -88,12 +88,12 @@ public class VirtualWorldRenderer extends Renderer {
 
     // Getter und Setter
     public VirtualWorld getWorld() {
-        return world;
+        return _world;
     }
     public void setWorld(VirtualWorld world) {
-        this.world = world;
+        this._world = world;
     }
 
     @Override
-    public void Destroy() { }
+    public void destroy() { }
 }

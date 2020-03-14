@@ -44,6 +44,4 @@ public class VirtualWorld {
     public long getWorldTime() {
         return _tileMap.getMapTime();
     }
-
-    public void Destroy() { /* Destroy */ }
 }

@@ -14,15 +14,15 @@ import org.lwjgl.opengl.GL11;
 import java.util.List;
 
 public class PopulationRenderer extends Renderer {
-    private Population population;
+    private Population _population;
 
     public PopulationRenderer(Population population) {
-        this.population = population;
+        this._population = population;
     }
 
     @Override
-    public void Render(int offsetX, int offsetY) {
-        List<Creature> cs = population.getCreatures();
+    public void render(int offsetX, int offsetY) {
+        List<Creature> cs = _population.getCreatures();
 
         for (int i = 0; i < cs.size(); i++) {
             Creature c = cs.get(i);
@@ -31,7 +31,7 @@ public class PopulationRenderer extends Renderer {
                 i--; continue;
             }
 
-            if (c.inhibits() || !c.getDraw()) continue;
+            if (c.isInhibiting() || !c.getDraw()) continue;
 
             // Körper der Kreatur zeichnen
             GL11.glColor3d(c.getGenetics().x, c.getGenetics().y, c.getGenetics().z);
@@ -63,12 +63,12 @@ public class PopulationRenderer extends Renderer {
 
     // Getter und Setter
     public Population getPopulation() {
-        return population;
+        return _population;
     }
     public void setPopulation(Population population) {
-        this.population = population;
+        this._population = population;
     }
 
     @Override
-    public void Destroy() { }
+    public void destroy() { }
 }

@@ -30,7 +30,7 @@ public class BrainRenderer extends Renderer {
     }
 
     @Override
-    public void Render(int offsetX, int offsetY) {
+    public void render(int offsetX, int offsetY) {
         if (_nn != null){
             List<double[][]> weights = _nn.getWeights();
             List<double[]> neuronActivities = new ArrayList<>();
@@ -152,10 +152,10 @@ public class BrainRenderer extends Renderer {
     public NeuralNetwork get_nn() {
         return _nn;
     }
-    public void set_nn(NeuralNetwork _nn) throws IllegalAccessException {
+    public void setNeuralNet(NeuralNetwork _nn) throws IllegalAccessException {
         this._nn = _nn;
     }
 
     @Override
-    public void Destroy() { }
+    public void destroy() { }
 }

@@ -11,7 +11,7 @@ public class Tile {
 
     // Eigenschaften
     public Double Energy;
-    private TileType Type;
+    private TileType _type;
 
     // Position
     public int X;
@@ -19,7 +19,7 @@ public class Tile {
 
     public Tile(double energy, TileType type, int x, int y) {
         Energy = energy;
-        Type = type;
+        _type = type;
 
         X = x;
         Y = y;
@@ -27,6 +27,6 @@ public class Tile {
 
     // Getter
     public TileType getType() {
-        return Type;
+        return _type;
     }
 }

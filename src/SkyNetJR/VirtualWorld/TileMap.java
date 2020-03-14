@@ -21,15 +21,15 @@ public class TileMap {
     private int _totalLandTiles;
     private long _mapTime;
 
-    private Random random;
+    private Random _random;
 
     public TileMap() {
-        random = new Random();
+        _random = new Random();
         _mapTime = 0;
     }
 
     // Standarteinstellungen setzen
-    public void SetDefaults() {
+    public void setDefaults() {
         _width = Settings.WorldSettings.Width;
         _height = Settings.WorldSettings.Height;
         _tileSize = Settings.WorldSettings.TileSize;
@@ -38,9 +38,9 @@ public class TileMap {
     }
 
     // Neues Terrain genereieren
-    public void Generate() {
+    public void generate() {
         ValueNoise2D vn = new ValueNoise2D(_width, _height, _generationInfo);
-        vn.Calculate();
+        vn.calculate();
         double[][] heightMap = vn.getHeightMap();
 
         if (_height > 0 && _width > 0 && _tileSize > 0 && _generationInfo != null) {
@@ -57,8 +57,9 @@ public class TileMap {
     }
 
     // Nächste Zeiteinheit der virtuellen Welt berechnen
-    public void Update(long deltaTime) {Update(deltaTime, 0, 1);}
-    public void Update(long deltaTime, int begin, int slice) {
+    public void update(long deltaTime) {
+        update(deltaTime, 0, 1);}
+    public void update(long deltaTime, int begin, int slice) {
         _mapTime += deltaTime;
 
         for (int x = begin; x < _width; x += slice) {
@@ -78,7 +79,7 @@ public class TileMap {
 
                     _tiles[x][y].Energy += Settings.SimulationSettings.BaseEnergyGeneration * influence * ((double) deltaTime / 1000d);
 
-                    if (random.nextDouble() <= Settings.SimulationSettings.RandomEnergyGenerationChance)
+                    if (_random.nextDouble() <= Settings.SimulationSettings.RandomEnergyGenerationChance)
                         _tiles[x][y].Energy += Settings.SimulationSettings.RandomEnergyGeneration;
 
                     if (_tiles[x][y].Energy > Settings.SimulationSettings.MaxEnergyPerTile)
@@ -144,7 +145,7 @@ public class TileMap {
     }
 
     // Energieänderung beantragen (z.B. wenn eine Kreatur versucht zu Essen)
-    public double RequestConsumeEnergy(Tile t, double energy){
+    public double requestConsumeEnergy(Tile t, double energy){
         if (_tiles[t.X][t.Y].Energy >= energy){
             _tiles[t.X][t.Y].Energy -= energy;
         }else {

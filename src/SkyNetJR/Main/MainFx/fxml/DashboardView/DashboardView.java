@@ -33,11 +33,11 @@ public class DashboardView {
 
     // Diagramme und deren Datenreihen
     @FXML private AreaChart<Double, Double> energyDistribution;
-    private AreaChart.Series<Double, Double> energyDistributionCreature;
-    private AreaChart.Series<Double, Double> energyDistributionMap;
+    private AreaChart.Series<Double, Double> _energyDistributionCreature;
+    private AreaChart.Series<Double, Double> _energyDistributionMap;
 
     @FXML private BarChart<String, Double> creaturesPerGeneration;
-    private BarChart.Series<String, Double> creaturesPerGenerationSeries;
+    private BarChart.Series<String, Double> _creaturesPerGenerationSeries;
 
     // Elemente für den Nutzer zu Interaktion
     @FXML private CheckBox toggleWorldView;
@@ -46,7 +46,7 @@ public class DashboardView {
     @FXML private Button newSim;
 
     // Timer zum Abrufen der Daten aus der Simulation
-    private Timer mainTimer;
+    private Timer _mainTimer;
 
     // Objekte der Simulation
     public VirtualWorld World;
@@ -60,7 +60,7 @@ public class DashboardView {
     {
         // WindowManager vorbereiten, um eigene Fenster erstellen zu können
         _windowManager = new WindowManager();
-        _windowManager.Init();
+        _windowManager.init();
 
         // Fenster für die Simulation erstellen
         WorldView = new View(Settings.ViewSettings.Width, Settings.ViewSettings.Height, "SkyNetJR - Virtuelle Welt", true, _windowManager);
@@ -76,23 +76,23 @@ public class DashboardView {
         BrainView.getRenderers().add(new BestBrainRenderer(null));
 
         // Energieverteilung
-        energyDistributionCreature = new XYChart.Series<>(FXCollections.observableArrayList());
-        energyDistributionCreature.setName("\u2211 Energie der Kreaturen");
-        energyDistributionMap = new XYChart.Series<>(FXCollections.observableArrayList());
-        energyDistributionMap.setName("\u2211 Energie in der Welt");
+        _energyDistributionCreature = new XYChart.Series<>(FXCollections.observableArrayList());
+        _energyDistributionCreature.setName("\u2211 Energie der Kreaturen");
+        _energyDistributionMap = new XYChart.Series<>(FXCollections.observableArrayList());
+        _energyDistributionMap.setName("\u2211 Energie in der Welt");
         energyDistribution.setData(FXCollections.observableArrayList(
-                energyDistributionCreature, energyDistributionMap)
+                _energyDistributionCreature, _energyDistributionMap)
         );
         energyDistribution.getXAxis().setAutoRanging(false);
 
         // Kreatur-Generations-Verteilung
-        creaturesPerGenerationSeries = new XYChart.Series<>(FXCollections.observableArrayList());
-        creaturesPerGeneration.setData(FXCollections.observableArrayList(creaturesPerGenerationSeries));
+        _creaturesPerGenerationSeries = new XYChart.Series<>(FXCollections.observableArrayList());
+        creaturesPerGeneration.setData(FXCollections.observableArrayList(_creaturesPerGenerationSeries));
 
-        mainTimer = new Timer();
+        _mainTimer = new Timer();
         //// Periodische Routinen definieren
         // Aktualisieren der Diagramme
-        mainTimer.scheduleAtFixedRate(new TimerTask() {
+        _mainTimer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
                 if (SimulationThread != null && SimulationThread.isStarted()) {
@@ -112,11 +112,11 @@ public class DashboardView {
                     Platform.runLater(new Runnable() {  // Definiert Routine im Thread des Timers aber führt diese erst später im GUI-Thread der Anwendung aus.
                         @Override
                         public void run() {
-                            for (int i = 0; i < energyDistributionCreature.getData().size(); i++) {
-                                if (energyDistributionCreature.getData().get(i).getXValue() > time - 600){
+                            for (int i = 0; i < _energyDistributionCreature.getData().size(); i++) {
+                                if (_energyDistributionCreature.getData().get(i).getXValue() > time - 600){
                                     if (i > 0) {
-                                        energyDistributionCreature.getData().remove(0, i - 1);
-                                        energyDistributionMap.getData().remove(0, i - 1);
+                                        _energyDistributionCreature.getData().remove(0, i - 1);
+                                        _energyDistributionMap.getData().remove(0, i - 1);
                                     }
 
                                     break;
@@ -124,17 +124,17 @@ public class DashboardView {
                             }
 
                             // Neue Datenpunkte in Diagramme laden
-                            energyDistributionCreature.getData().add(new StackedAreaChart.Data(time, (wrapper.getTotalCreatureEnergy())));
-                            energyDistributionMap.getData().add(new StackedAreaChart.Data(time, (wrapper.getTotalMapEnergy() / 10)));
+                            _energyDistributionCreature.getData().add(new StackedAreaChart.Data(time, (wrapper.getTotalCreatureEnergy())));
+                            _energyDistributionMap.getData().add(new StackedAreaChart.Data(time, (wrapper.getTotalMapEnergy() / 10)));
 
-                            creaturesPerGenerationSeries.getData().clear();
+                            _creaturesPerGenerationSeries.getData().clear();
                             for (Long l : creaturePerGenerationCount.keySet()){
-                                creaturesPerGenerationSeries.getData().add(new XYChart.Data<>(l.toString(), creaturePerGenerationCount.get(l)));
+                                _creaturesPerGenerationSeries.getData().add(new XYChart.Data<>(l.toString(), creaturePerGenerationCount.get(l)));
                             }
 
                             // Zeitachse manuell skalieren
-                            ((ValueAxis<Double>)energyDistribution.getXAxis()).setLowerBound(Math.round(energyDistributionCreature.getData().get(0).getXValue()));
-                            ((ValueAxis<Double>)energyDistribution.getXAxis()).setUpperBound(Math.round(energyDistributionCreature.getData().get(energyDistributionCreature.getData().size() - 1).getXValue()));
+                            ((ValueAxis<Double>)energyDistribution.getXAxis()).setLowerBound(Math.round(_energyDistributionCreature.getData().get(0).getXValue()));
+                            ((ValueAxis<Double>)energyDistribution.getXAxis()).setUpperBound(Math.round(_energyDistributionCreature.getData().get(_energyDistributionCreature.getData().size() - 1).getXValue()));
                             ((ValueAxis<Double>)energyDistribution.getXAxis()).setMinorTickVisible(false);
                         }
                     });
@@ -142,7 +142,7 @@ public class DashboardView {
             }
         }, 1000, 1000);
         // Aktualisieren der Benutzerelemente
-        mainTimer.scheduleAtFixedRate(new TimerTask() {
+        _mainTimer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
                 if (SimulationThread == null || !SimulationThread.isStarted()) {
@@ -182,14 +182,13 @@ public class DashboardView {
         WorldView.getRenderers().clear();
         ((BestBrainRenderer)BrainView.getRenderers().get(0)).setPopulation(null);
 
-        if (SimulationThread != null) SimulationThread.Destroy();
+        if (SimulationThread != null) SimulationThread.destroy();
         if (Population != null) Population.Destroy();
-        if (World != null) World.Destroy();
 
         // Simulatio vorbereiten
         TileMap map = new TileMap();
-        map.SetDefaults();
-        map.Generate();
+        map.setDefaults();
+        map.generate();
         World = new VirtualWorld(map);
         World.setRunning(true);
         World.setDraw(true);
@@ -210,10 +209,10 @@ public class DashboardView {
 
     // Daten zurücksetzen
     private void resetData(){
-        energyDistributionMap.getData().clear();
-        energyDistributionCreature.getData().clear();
+        _energyDistributionMap.getData().clear();
+        _energyDistributionCreature.getData().clear();
 
-        creaturesPerGenerationSeries.getData().clear();
+        _creaturesPerGenerationSeries.getData().clear();
     }
 
     // Weltansicht anzeigen oder verstecken
@@ -234,9 +233,9 @@ public class DashboardView {
     }
 
     // Aufräumen - Objekte "zerstören" und Programm kontrolliert schließen
-    public void Shutdown(){
-        mainTimer.cancel();
-        mainTimer = null;
+    public void shutdown(){
+        _mainTimer.cancel();
+        _mainTimer = null;
 
         BrainView.setVisible(false);
         BrainView.setClosable(true);
@@ -248,10 +247,10 @@ public class DashboardView {
         WorldView.Destroy();
         WorldView = null;
 
-        _windowManager.Destroy();
+        _windowManager.destroy();
 
         if (SimulationThread != null){
-            SimulationThread.Destroy();
+            SimulationThread.destroy();
             SimulationThread = null;
         }
 
@@ -261,7 +260,6 @@ public class DashboardView {
         }
 
         if (World != null){
-            World.Destroy();
             World = null;
         }
     }

@@ -33,7 +33,7 @@ public class MainFx extends Application {
             primaryStage.setTitle("[Dashboard] SkyNetJR - Ludger Halpick");
             primaryStage.setScene(scene);
             primaryStage.setOnHidden(e -> {
-                ((DashboardView)loader.getController()).Shutdown();
+                ((DashboardView)loader.getController()).shutdown();
             });
             primaryStage.show();
         } catch (IOException e) {

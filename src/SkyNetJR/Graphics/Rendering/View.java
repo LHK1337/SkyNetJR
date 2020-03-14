@@ -12,23 +12,23 @@ import java.util.List;
 
 public class View {
     // Eigenschaften des Fensterkontextes
-    private int width;
-    private int height;
-    private final boolean resizeable;
-    private final String title;
+    private int _width;
+    private int _height;
+    private final boolean _resizeable;
+    private final String _title;
 
-    private boolean Destroyed;
-    private List<Renderer> renderers;
-    private boolean useVSync;
+    private boolean _destroyed;
+    private List<Renderer> _renderers;
+    private boolean _useVSync;
     private WindowThread _windowThread;
 
     public View(int width, int height, String title, boolean resizeable, WindowManager wm) {
-        this.width = width;
-        this.height = height;
-        renderers = new ArrayList<>();
-        useVSync = true;
-        this.title = title;
-        this.resizeable = resizeable;
+        this._width = width;
+        this._height = height;
+        _renderers = new ArrayList<>();
+        _useVSync = true;
+        this._title = title;
+        this._resizeable = resizeable;
 
         _windowThread = new WindowThread(this, wm);
     }
@@ -40,35 +40,35 @@ public class View {
 
     // Getter und Setter
     public List<Renderer> getRenderers() {
-        return renderers;
+        return _renderers;
     }
 
     public boolean isUseVSync() {
-        return useVSync;
+        return _useVSync;
     }
     public void setUseVSync(boolean useVSync) {
-        this.useVSync = useVSync;
+        this._useVSync = useVSync;
     }
 
     public int getWidth() {
-        return width;
+        return _width;
     }
     public void setWidth(int w) {
-        width = w;
+        _width = w;
     }
 
     public int getHeight() {
-        return height;
+        return _height;
     }
     public void setHeight(int h) {
-        height = h;
+        _height = h;
     }
 
     public String getTitle() {
-        return title;
+        return _title;
     }
 
-    public boolean getResizable() { return resizeable; }
+    public boolean getResizable() { return _resizeable; }
 
     public void setClosable(boolean closable) { _windowThread.setAllowClosing(closable); }
     public boolean isClosable() { return _windowThread.isAllowClosing(); }
@@ -81,18 +81,18 @@ public class View {
     }
 
     public boolean getDestroyed() {
-        return Destroyed;
+        return _destroyed;
     }
 
     // View zerstören und Arbeitsspeicher aufräumen
     public void Destroy() {
-        _windowThread.Destroy();
+        _windowThread.destroy();
 
-        for (Renderer renderer : renderers) {
-            renderer.Destroy();
+        for (Renderer renderer : _renderers) {
+            renderer.destroy();
         }
 
-        renderers.clear();
-        Destroyed = true;
+        _renderers.clear();
+        _destroyed = true;
     }
 }

@@ -16,24 +16,24 @@ public class BestBrainRenderer extends BrainRenderer {
     }
 
     @Override
-    public void Render(int offsetX, int offsetY) {
+    public void render(int offsetX, int offsetY) {
         // Ermittlung des besten Gehirns
         if (_population != null && _population.isRunning() && _population.getCreatures().size() > 0) {
             try {
-                super.set_nn(_population.getCreatures().get(0).getBrain());
+                super.setNeuralNet(_population.getCreatures().get(0).getBrain());
             } catch (IllegalAccessException e) {
                 e.printStackTrace();
             }
         }
         else return;
 
-        super.Render(offsetX, offsetY);
+        super.render(offsetX, offsetY);
     }
 
     // Setter und Getter
     @Override
-    public void set_nn(NeuralNetwork nn) throws IllegalAccessException {
-        throw new IllegalAccessException();
+    public void setNeuralNet(NeuralNetwork nn) throws IllegalAccessException {
+        throw new IllegalAccessException(); // Aufruf dieser Methode verbieten
     }
 
     public void setPopulation(Population p) {

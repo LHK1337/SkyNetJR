@@ -5,19 +5,19 @@
 package SkyNetJR.Threading;
 
 public abstract class DestroyableThread extends Thread {
-    protected final Object destroyedHandle;
-    protected boolean destroy;
+    protected final Object _destroyedHandle;
+    protected boolean _destroy;
 
     protected DestroyableThread() {
-        this.destroyedHandle = new Object();
-        destroy = false;
+        this._destroyedHandle = new Object();
+        _destroy = false;
     }
 
     // Ermittelt, ob Thread beendet werden soll
-    protected boolean ShouldExit(){
-        if (destroy) {
-            synchronized (destroyedHandle) {
-                destroyedHandle.notifyAll();
+    protected boolean shouldExit(){
+        if (_destroy) {
+            synchronized (_destroyedHandle) {
+                _destroyedHandle.notifyAll();
             }
             return true;
         }else return false;
@@ -25,12 +25,12 @@ public abstract class DestroyableThread extends Thread {
 
     // Getter
     public Object getDestroyedHandle() {
-        return destroyedHandle;
+        return _destroyedHandle;
     }
 
     // Thread anhalten und zerstören
-    public void Destroy() {
-        destroy = true;
+    @Override public void destroy() {
+        _destroy = true;
 
         // Deadlock durch Selbstzerstörung verhindern
         if (Thread.currentThread().getId() == this.getId())
@@ -38,8 +38,8 @@ public abstract class DestroyableThread extends Thread {
 
         try {
             if (this.getState() != State.TERMINATED)
-                synchronized (destroyedHandle) {
-                    destroyedHandle.wait(3000);
+                synchronized (_destroyedHandle) {
+                    _destroyedHandle.wait(3000);
                 }
 
             if (this.getState() != State.TERMINATED)

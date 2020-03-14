@@ -31,21 +31,21 @@ public enum NeuralPropertyType {
     Attack                  (13),
     Heal                    (14);
 
-    private final byte value;
+    private final byte _VALUE;
     private NeuralPropertyType(byte value) {
-        this.value = value;
+        this._VALUE = value;
     }
     private NeuralPropertyType(int value) {
-        this.value = (byte)value;
+        this._VALUE = (byte)value;
     }
 
     public byte getValue() {
-        return value;
+        return _VALUE;
     }
 
     // Cachen der aufgelisteten Werten, um Funktionsaufruf zu beschleunigen
-    private static NeuralPropertyType[] cache =  NeuralPropertyType.values();
+    private static NeuralPropertyType[] _Cache =  NeuralPropertyType.values();
     public static NeuralPropertyType FromByte(byte value){
-        return cache[value];
+        return _Cache[value];
     }
 }

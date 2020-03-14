@@ -1,33 +1,37 @@
 /*
 * Helferklasse, Stoppuhr
+* basiert auf der Systemzeit
 * */
 
 package SkyNetJR.Utils;
 
 public class Stopwatch {
 
-    private long startTime = 0;
-    private long endTime = 0;
+    private long _startTime = 0;
+    private long _endTime = 0;
 
+    // Speichert Anfangszeit - Stoppuhr starten
     public void start() {
-        this.startTime = System.currentTimeMillis();
+        this._startTime = System.currentTimeMillis();
     }
 
+    // Speichert Endzeit - Stoppuhr stoppen bzw. Runde messen
     public void end() {
-        this.endTime = System.currentTimeMillis();
+        this._endTime = System.currentTimeMillis();
     }
 
+    // Getter
     public long getStartTime() {
-        return this.startTime;
+        return this._startTime;
     }
 
     public long getEndTime() {
-        return this.endTime;
+        return this._endTime;
     }
 
-    public long getCurrentTime() { return System.currentTimeMillis() - this.startTime; }
+    public long getCurrentTime() { return System.currentTimeMillis() - this._startTime; }
 
     public long getTotalTime() {
-        return this.endTime - this.startTime;
+        return this._endTime - this._startTime;
     }
 }

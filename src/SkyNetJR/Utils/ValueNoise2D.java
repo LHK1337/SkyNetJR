@@ -19,8 +19,9 @@ public class ValueNoise2D {
     public int Octaves;
     public int StartFrequencyX;
     public int StartFrequencyY;
-    private double[][] heightMap;
-    private Random random;
+    private double[][] _heightMap;
+    private Random _random;
+
     public ValueNoise2D(int width, int height, GenerationInfo gI) {
         WIDTH = width;
         HEIGHT = height;
@@ -30,10 +31,9 @@ public class ValueNoise2D {
         StartFrequencyX = gI.StartFrequencyX;
         StartFrequencyY = gI.StartFrequencyY;
 
-        heightMap = new double[width][height];
-        random = new Random(Seed);
+        _heightMap = new double[width][height];
+        _random = new Random(Seed);
     }
-
     public ValueNoise2D(int width, int height, int octaves, int startFrequencyX, int startFrequencyY) {
         WIDTH = width;
         HEIGHT = height;
@@ -43,12 +43,12 @@ public class ValueNoise2D {
         StartFrequencyX = startFrequencyX;
         StartFrequencyY = startFrequencyY;
 
-        heightMap = new double[width][height];
-        random = new Random(Seed);
+        _heightMap = new double[width][height];
+        _random = new Random(Seed);
     }
 
     // Noise berechnen
-    public void Calculate() {
+    public void calculate() {
         int currentFreqX = StartFrequencyX;
         int currentFreqY = StartFrequencyY;
 
@@ -65,7 +65,7 @@ public class ValueNoise2D {
 
             for (int i = 0; i < currentFreqX + 1; i++) {
                 for (int j = 0; j < currentFreqY + 1; j++) {
-                    discretePoints[i][j] = (random.nextDouble() * currentAlpha * 2) - currentAlpha;
+                    discretePoints[i][j] = (_random.nextDouble() * currentAlpha * 2) - currentAlpha;
                 }
             }
 
@@ -77,9 +77,9 @@ public class ValueNoise2D {
                     int indexX = (int) currentX;
                     int indexY = (int) currentY;
 
-                    double w0 = interpolate(discretePoints[indexX][indexY], discretePoints[indexX + 1][indexY], currentX - indexX);
-                    double w1 = interpolate(discretePoints[indexX][indexY + 1], discretePoints[indexX + 1][indexY + 1], currentX - indexX);
-                    heightMap[i][j] += interpolate(w0, w1, currentY - indexY);
+                    double w0 = Interpolate(discretePoints[indexX][indexY], discretePoints[indexX + 1][indexY], currentX - indexX);
+                    double w1 = Interpolate(discretePoints[indexX][indexY + 1], discretePoints[indexX + 1][indexY + 1], currentX - indexX);
+                    _heightMap[i][j] += Interpolate(w0, w1, currentY - indexY);
                 }
             }
         }
@@ -93,14 +93,14 @@ public class ValueNoise2D {
 
         for (int i = 0; i < WIDTH; i++) {
             for (int j = 0; j < HEIGHT; j++) {
-                if (heightMap[i][j] < min)
-                    min = heightMap[i][j];
+                if (_heightMap[i][j] < min)
+                    min = _heightMap[i][j];
             }
         }
 
         for (int i = 0; i < WIDTH; i++) {
             for (int j = 0; j < HEIGHT; j++) {
-                heightMap[i][j] -= min;
+                _heightMap[i][j] -= min;
             }
         }
 
@@ -108,36 +108,31 @@ public class ValueNoise2D {
 
         for (int i = 0; i < WIDTH; i++) {
             for (int j = 0; j < HEIGHT; j++) {
-                if (heightMap[i][j] > max)
-                    max = heightMap[i][j];
+                if (_heightMap[i][j] > max)
+                    max = _heightMap[i][j];
             }
         }
 
         for (int i = 0; i < WIDTH; i++) {
             for (int j = 0; j < HEIGHT; j++) {
-                heightMap[i][j] /= max;
+                _heightMap[i][j] /= max;
             }
         }
     }
 
     // Methoden zum Interpolieren
-    private double interpolate(double a, double b, double t) {
+    private static double Interpolate(double a, double b, double t) {
         return CosineInterpolate(a, b, t);
         //return LinearInterpolate(a, b, t);
     }
-
     private static double CosineInterpolate(double a, double b, double t) {
         double t2;
         t2 = (1.0d - Math.cos(t * Math.PI)) / 2.0d;
-        return (a * (1.0d - t2) + b * t2);
-    }
-
-    private static double LinearInterpolate(double a, double b, double t) {
-        return (a * (1 - t) + b * t);
-    }
+        return (a * (1.0d - t2) + b * t2); }
+    private static double LinearInterpolate(double a, double b, double t) { return (a * (1 - t) + b * t); }
 
     // Getter
     public double[][] getHeightMap() {
-        return heightMap;
+        return _heightMap;
     }
 }

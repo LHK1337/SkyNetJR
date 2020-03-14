@@ -50,12 +50,12 @@ public class SimulationThread extends DestroyableThread {
 
         Stopwatch realTimeStopwatch = new Stopwatch();
 
-        while (!ShouldExit()){
+        while (!shouldExit()){
             realTimeStopwatch.start();
 
             // Virtuelle Welt berechnen
             if (!_multiThread || _threadPool != null)
-                _world.getTileMap().Update(_timePrecision);
+                _world.getTileMap().update(_timePrecision);
             else {
                 Stack<Future> f = new Stack<>();
 
@@ -63,7 +63,7 @@ public class SimulationThread extends DestroyableThread {
                     int finalI = i;
 
                     f.push(_threadPool.submit(() -> {
-                        _world.getTileMap().Update(_timePrecision, finalI, _threadPoolSize);
+                        _world.getTileMap().update(_timePrecision, finalI, _threadPoolSize);
                     }));
                 }
 
@@ -77,7 +77,7 @@ public class SimulationThread extends DestroyableThread {
             }
             _world.setLastSimulationTime(realTimeStopwatch.getCurrentTime());
 
-            if (ShouldExit()) break;
+            if (shouldExit()) break;
 
             // Population berechnen
             _population.Update(_timePrecision, _multiThread, _threadPool);
@@ -121,8 +121,8 @@ public class SimulationThread extends DestroyableThread {
 
     // Zerstört Thread und räumt Arbeitspeicher auf
     @Override
-    public void Destroy() {
-        super.Destroy();
+    public void destroy() {
+        super.destroy();
 
         if (_multiThread) {
             ExecutorService tp = _threadPool;

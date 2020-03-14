@@ -18,41 +18,41 @@ import java.util.Random;
 
 public class Creature {
     // Eigenschaften der Kreatur
-    private double Energy;
-    private double Age;
-    private double EnergyOnCurrentTile;
-    private boolean CurrentTileWater;
-    private long Generation;
-    private double PositionX;
-    private double PositionY;
-    private double Rotation;
-    private boolean destroyed;
-    private boolean inhibit;
+    private double _energy;
+    private double _age;
+    private double _energyOnCurrentTile;
+    private boolean _currentTileWater;
+    private long _generation;
+    private double _positionX;
+    private double _positionY;
+    private double _rotation;
+    private boolean _destroyed;
+    private boolean _inhibit;
 
     //// Schnittstellen zwischen Eigenschaften und Gehirn der Kreatur
     // Sensing
-    private NeuralProperty<Double> NeuralInEnergy;
-    private NeuralProperty<Double> NeuralInAge;
-    private NeuralProperty<Double> NeuralInEnergyOnCurrentTile;
-    private NeuralProperty<Double> NeuralInCurrentTileWater;
+    private NeuralProperty<Double> _neuralInEnergy;
+    private NeuralProperty<Double> _neuralInAge;
+    private NeuralProperty<Double> _neuralInEnergyOnCurrentTile;
+    private NeuralProperty<Double> _neuralInCurrentTileWater;
     // Acting
-    private NeuralProperty<Double> NeuralOutRotation;
-    private NeuralProperty<Double> NeuralOutForward;
-    private NeuralProperty<Double> NeuralOutEat;
-    private NeuralProperty<Double> NeuralOutReplicate;
+    private NeuralProperty<Double> _neuralOutRotation;
+    private NeuralProperty<Double> _neuralOutForward;
+    private NeuralProperty<Double> _neuralOutEat;
+    private NeuralProperty<Double> _neuralOutReplicate;
 
     // Auflistung der Fühler der Kreatur
-    private List<Feeler> Feelers;
+    private List<Feeler> _feelers;
 
     // Genidentifikation der Kreatur (eine Farbe im RGB-Farbsystem)
-    private Vector3d Genetics;
+    private Vector3d _genetics;
 
     // Spezieller Alterungskoeffizient der Zelle (beeinflusst den Alterungsprozess der Kreatur)
-    private double SpecificAgingFactor;
+    private double _specificAgingFactor;
 
     // Referenzen
-    private Population Population;  // aktuelle Population
-    private NeuralNetwork brain;    // Gehirn der Kreatur
+    private Population _population;  // aktuelle Population
+    private NeuralNetwork _brain;    // Gehirn der Kreatur
 
     // Legt fest, ob die Kreatur gerendert werden soll
     private boolean _draw;
@@ -68,168 +68,168 @@ public class Creature {
 
     // Neue Kreatur einer Population und Generation an einer bestimmten Position
     public Creature(double positionX, double positionY, long generation, Population population) {
-        Population = population;
-        Generation = generation;
+        _population = population;
+        _generation = generation;
 
-        SetDefaults();      // Standartwerte setzen
-        InitNewBrain();     // Neues Gehin initialisieren
+        setDefaults();      // Standartwerte setzen
+        initNewBrain();     // Neues Gehin initialisieren
 
-        AddFeeler();        // Ersten Fühler hinzufügen
+        addFeeler();        // Ersten Fühler hinzufügen
 
-        PositionX = positionX;
-        PositionY = positionY;
+        _positionX = positionX;
+        _positionY = positionY;
 
-        RandomizeGenetics();    // Zufällige Genidentifikation generieren
+        randomizeGenetics();    // Zufällige Genidentifikation generieren
     }
 
     // Neue Kreatur mit Vererbung einer Parentalkreatur
     public Creature(Creature parent){
-        inhibit = true;
-        Generation = parent.Generation + 1;
-        Population = parent.Population;
-        SetDefaults();              // Standartwerte setzen
-        InheritFromParent(parent);  // Gehirn vererben
+        _inhibit = true;
+        _generation = parent._generation + 1;
+        _population = parent._population;
+        setDefaults();              // Standartwerte setzen
+        inheritFromParent(parent);  // Gehirn vererben
 
-        Genetics = new Vector3d(parent.Genetics.x, parent.Genetics.y, parent.Genetics.z);   // Genidentifikation übernehemn
+        _genetics = new Vector3d(parent._genetics.x, parent._genetics.y, parent._genetics.z);   // Genidentifikation übernehemn
 
-        MutateGenetics();   // Genidentifikation mutieren
-        MutateFeelers();    // Anzahl der Fühöer mutieren
-        MutateBrain();      // Gehirn mutieren
+        mutateGenetics();   // Genidentifikation mutieren
+        mutateFeelers();    // Anzahl der Fühöer mutieren
+        mutateBrain();      // Gehirn mutieren
     }
 
     // Eigenschaften einer Parentalgeneration vererben
-    private void InheritFromParent(Creature parent){
-        Energy = Settings.CreatureSettings.EnergyDrainPerReplication;
-        PositionX = parent.PositionX;
-        PositionY = parent.PositionY;
+    private void inheritFromParent(Creature parent){
+        _energy = Settings.CreatureSettings.EnergyDrainPerReplication;
+        _positionX = parent._positionX;
+        _positionY = parent._positionY;
 
-        Feelers = new ArrayList<>();
-        for (int i = 0; i < parent.Feelers.size(); i++) {
-            Feelers.add(new Feeler((byte)i));
+        _feelers = new ArrayList<>();
+        for (int i = 0; i < parent._feelers.size(); i++) {
+            _feelers.add(new Feeler((byte)i));
 
-            Feelers.get(i).Angle.setValue(new Random().nextDouble() * 2 * Math.PI);
-            Feelers.get(i).Length.setValue(0d);
+            _feelers.get(i).Angle.setValue(new Random().nextDouble() * 2 * Math.PI);
+            _feelers.get(i).Length.setValue(0d);
         }
 
-        brain = new NeuralNetwork(parent.brain);
+        _brain = new NeuralNetwork(parent._brain);
         NeuralProperty[] ins = parent.getBrain().getInputs();
         NeuralProperty[] outs = parent.getBrain().getOutputs();
-        LinkBrainFromParent(ins, outs);
+        linkBrainFromParent(ins, outs);
     }
 
     // Eigenes Gehirn der Kreatur ähnlich der Parentalkreatur mit "Muskeln" verbinden
-    private void LinkBrainFromParent(NeuralProperty[] ins, NeuralProperty[] outs){
+    private void linkBrainFromParent(NeuralProperty[] ins, NeuralProperty[] outs){
         for (NeuralProperty in : ins) {
             switch (in.getType()) { case Bias: break;
-                case EnergySelf: brain.AddInput(NeuralInEnergy, false);break;
-                case Age: brain.AddInput(NeuralInAge, false);break;
-                case EnergyOnCurrentTile: brain.AddInput(NeuralInEnergyOnCurrentTile, false);break;
-                case CurrentTileWater: brain.AddInput(NeuralInCurrentTileWater, false);break;
+                case EnergySelf: _brain.addInput(_neuralInEnergy, false);break;
+                case Age: _brain.addInput(_neuralInAge, false);break;
+                case EnergyOnCurrentTile: _brain.addInput(_neuralInEnergyOnCurrentTile, false);break;
+                case CurrentTileWater: _brain.addInput(_neuralInCurrentTileWater, false);break;
 
                 // Feelers
-                case FeelsWater: brain.AddInput(Feelers.get(in.getTag()).NeuralInFeelsWater, false);break;
-                case EnergyValueFeeler: brain.AddInput(Feelers.get(in.getTag()).NeuralInEnergyValueFeeler, false);break;
+                case FeelsWater: _brain.addInput(_feelers.get(in.getTag()).NeuralInFeelsWater, false);break;
+                case EnergyValueFeeler: _brain.addInput(_feelers.get(in.getTag()).NeuralInEnergyValueFeeler, false);break;
             }
         }
 
         for (NeuralProperty out : outs) {
             switch (out.getType()) {
-                case Rotate: brain.AddOutput(NeuralOutRotation, false); break;
-                case Forward: brain.AddOutput(NeuralOutForward, false); break;
-                case Eat: brain.AddOutput(NeuralOutEat, false); break;
-                case Replicate: brain.AddOutput(NeuralOutReplicate, false); break;
+                case Rotate: _brain.addOutput(_neuralOutRotation, false); break;
+                case Forward: _brain.addOutput(_neuralOutForward, false); break;
+                case Eat: _brain.addOutput(_neuralOutEat, false); break;
+                case Replicate: _brain.addOutput(_neuralOutReplicate, false); break;
 
                 //Feelers
-                case FeelerAngle: brain.AddOutput(Feelers.get(out.getTag()).Angle, false); break;
-                case FeelerLength: brain.AddOutput(Feelers.get(out.getTag()).Length, false); break;
+                case FeelerAngle: _brain.addOutput(_feelers.get(out.getTag()).Angle, false); break;
+                case FeelerLength: _brain.addOutput(_feelers.get(out.getTag()).Length, false); break;
             }
         }
     }
 
     // Neues Gehirn initialisieren
-    private void InitNewBrain(){
-        brain = new NeuralNetwork();
+    private void initNewBrain(){
+        _brain = new NeuralNetwork();
 
         // Zufällige Anzahl an versteckten Schichten erstellen
         for (int i = 0; i < Settings.CreatureSettings.BaseHiddenNeuronLayers; i++) {
-            brain.AddHiddenLayer(new Random().nextInt(Settings.CreatureSettings.MutationRates.MaxHiddenNeuronsPerLayer - Settings.CreatureSettings.MutationRates.MinHiddenNeuronsPerLayer) + Settings.CreatureSettings.MutationRates.MinHiddenNeuronsPerLayer, false);
+            _brain.addHiddenLayer(new Random().nextInt(Settings.CreatureSettings.MutationRates.MaxHiddenNeuronsPerLayer - Settings.CreatureSettings.MutationRates.MinHiddenNeuronsPerLayer) + Settings.CreatureSettings.MutationRates.MinHiddenNeuronsPerLayer, false);
         }
 
         // Eingänge und ausgänge verbinden
-        brain.AddInput(NeuralInEnergy, false);
-        brain.AddInput(NeuralInAge, false);
+        _brain.addInput(_neuralInEnergy, false);
+        _brain.addInput(_neuralInAge, false);
         if (Settings.CreatureSettings.CanFeelOnBody)
         {
-            brain.AddInput(NeuralInEnergyOnCurrentTile, false);
-            brain.AddInput(NeuralInCurrentTileWater, false);
+            _brain.addInput(_neuralInEnergyOnCurrentTile, false);
+            _brain.addInput(_neuralInCurrentTileWater, false);
         }
 
-        brain.AddOutput(NeuralOutRotation, false);
-        brain.AddOutput(NeuralOutForward, false);
-        brain.AddOutput(NeuralOutEat, false);
+        _brain.addOutput(_neuralOutRotation, false);
+        _brain.addOutput(_neuralOutForward, false);
+        _brain.addOutput(_neuralOutEat, false);
 
         // beim letzten Eintrag rebuild = true, damit die Gewichtsmatrizen erneuert werden
-        brain.AddOutput(NeuralOutReplicate, true);
+        _brain.addOutput(_neuralOutReplicate, true);
     }
 
     // Standartwerte laden und Objekte initialisieren
-    private void SetDefaults(){
+    private void setDefaults(){
         _draw = true;
 
-        Energy = Settings.CreatureSettings.BaseEnergy;
-        Age = 0d;
-        EnergyOnCurrentTile = 0d;
-        CurrentTileWater = false;
-        Rotation = new Random().nextDouble() * 2 * Math.PI;
+        _energy = Settings.CreatureSettings.BaseEnergy;
+        _age = 0d;
+        _energyOnCurrentTile = 0d;
+        _currentTileWater = false;
+        _rotation = new Random().nextDouble() * 2 * Math.PI;
 
-        NeuralInEnergy = new NeuralProperty<Double>(Energy, NeuralPropertyType.EnergySelf);
-        NeuralInAge = new NeuralProperty<Double>(Age, NeuralPropertyType.Age);
+        _neuralInEnergy = new NeuralProperty<Double>(_energy, NeuralPropertyType.EnergySelf);
+        _neuralInAge = new NeuralProperty<Double>(_age, NeuralPropertyType.Age);
         if (Settings.CreatureSettings.CanFeelOnBody) {
-            NeuralInEnergyOnCurrentTile = new NeuralProperty<>(NeuralPropertyType.EnergyOnCurrentTile);
-            NeuralInCurrentTileWater = new NeuralProperty<>(NeuralPropertyType.CurrentTileWater);
+            _neuralInEnergyOnCurrentTile = new NeuralProperty<>(NeuralPropertyType.EnergyOnCurrentTile);
+            _neuralInCurrentTileWater = new NeuralProperty<>(NeuralPropertyType.CurrentTileWater);
         }
 
-        NeuralOutRotation = new NeuralProperty<>(NeuralPropertyType.Rotate);
-        NeuralOutForward = new NeuralProperty<>(NeuralPropertyType.Forward);
-        NeuralOutEat = new NeuralProperty<>(NeuralPropertyType.Eat);
-        NeuralOutReplicate = new NeuralProperty<>(NeuralPropertyType.Replicate);
+        _neuralOutRotation = new NeuralProperty<>(NeuralPropertyType.Rotate);
+        _neuralOutForward = new NeuralProperty<>(NeuralPropertyType.Forward);
+        _neuralOutEat = new NeuralProperty<>(NeuralPropertyType.Eat);
+        _neuralOutReplicate = new NeuralProperty<>(NeuralPropertyType.Replicate);
 
-        Feelers = new ArrayList<>();
+        _feelers = new ArrayList<>();
 
-        SpecificAgingFactor = 1 + (new Random().nextDouble() * Settings.CreatureSettings.AgingVariance);
+        _specificAgingFactor = 1 + (new Random().nextDouble() * Settings.CreatureSettings.AgingVariance);
     }
 
     // Zufällige Genidentifikation generieren
-    private void RandomizeGenetics(){
+    private void randomizeGenetics(){
         Random r = new Random();
-        Genetics = new Vector3d(r.nextDouble(), r.nextDouble(), r.nextDouble());
+        _genetics = new Vector3d(r.nextDouble(), r.nextDouble(), r.nextDouble());
     }
 
     // Genidentifikation mutieren
-    private void MutateGenetics(){
+    private void mutateGenetics(){
         Random r = new Random();
-        Genetics.x += (r.nextDouble() * 2 * Settings.CreatureSettings.MutationRates.Genetics) - Settings.CreatureSettings.MutationRates.Genetics;
-        if (Genetics.x > 1) Genetics.x = 1; else if (Genetics.x < 0) Genetics.x = 0;
+        _genetics.x += (r.nextDouble() * 2 * Settings.CreatureSettings.MutationRates.Genetics) - Settings.CreatureSettings.MutationRates.Genetics;
+        if (_genetics.x > 1) _genetics.x = 1; else if (_genetics.x < 0) _genetics.x = 0;
 
-        Genetics.y += (r.nextDouble() * 2 * Settings.CreatureSettings.MutationRates.Genetics) - Settings.CreatureSettings.MutationRates.Genetics;
-        if (Genetics.y > 1) Genetics.y = 1; else if (Genetics.y < 0) Genetics.y = 0;
+        _genetics.y += (r.nextDouble() * 2 * Settings.CreatureSettings.MutationRates.Genetics) - Settings.CreatureSettings.MutationRates.Genetics;
+        if (_genetics.y > 1) _genetics.y = 1; else if (_genetics.y < 0) _genetics.y = 0;
 
-        Genetics.z += (r.nextDouble() * 2 * Settings.CreatureSettings.MutationRates.Genetics) - Settings.CreatureSettings.MutationRates.Genetics;
-        if (Genetics.z > 1) Genetics.z = 1; else if (Genetics.z < 0) Genetics.z = 0;
+        _genetics.z += (r.nextDouble() * 2 * Settings.CreatureSettings.MutationRates.Genetics) - Settings.CreatureSettings.MutationRates.Genetics;
+        if (_genetics.z > 1) _genetics.z = 1; else if (_genetics.z < 0) _genetics.z = 0;
     }
 
     // Fühler mutieren
-    private void MutateFeelers(){
+    private void mutateFeelers(){
         Random r = new Random();
 
         if (r.nextDouble() >= Settings.CreatureSettings.MutationRates.FeelerMutationChance) {
             if (r.nextDouble() >= Settings.CreatureSettings.MutationRates.FeelerAddRemoveThreshold)
             {
-                AddFeeler();
+                addFeeler();
                 //System.out.println("[MUTATION] Feeler+");
             }else {
-                if (Feelers.size() > 1){
-                    RemoveFeeler();
+                if (_feelers.size() > 1){
+                    removeFeeler();
                     //System.out.println("[MUTATION] Feeler-");
                 }
             }
@@ -237,234 +237,234 @@ public class Creature {
     }
 
     // Gehirn mutieren
-    private void MutateBrain(){
+    private void mutateBrain(){
         Random r = new Random();
 
         if (r.nextDouble() >= Settings.CreatureSettings.MutationRates.BrainMutationChance){
             if (r.nextDouble() >= Settings.CreatureSettings.MutationRates.HiddenLayerAddRemoveThreshold){
-                brain.AddHiddenLayer(Settings.CreatureSettings.MutationRates.MinHiddenNeuronsPerLayer + r.nextInt(Settings.CreatureSettings.MutationRates.MaxHiddenNeuronsPerLayer - Settings.CreatureSettings.MutationRates.MinHiddenNeuronsPerLayer));
+                _brain.addHiddenLayer(Settings.CreatureSettings.MutationRates.MinHiddenNeuronsPerLayer + r.nextInt(Settings.CreatureSettings.MutationRates.MaxHiddenNeuronsPerLayer - Settings.CreatureSettings.MutationRates.MinHiddenNeuronsPerLayer));
                 //System.out.println("[MUTATION] Hidden Layer+");
             }
             else
             {
                 //brain.RemoveLatestHiddenLayer();
-                brain.RemoveRandomHiddenLayer();
+                _brain.removeRandomHiddenLayer();
                 //System.out.println("[MUTATION] Hidden Layer-");
             }
         }
 
-        brain.Mutate(Settings.CreatureSettings.MutationRates.Weights);
+        _brain.mutate(Settings.CreatureSettings.MutationRates.Weights);
     }
 
     // Fühler hinzufügen
-    private void AddFeeler(){
-        Feeler f = new Feeler((byte)Feelers.size());
-        Feelers.add(f);
+    private void addFeeler(){
+        Feeler f = new Feeler((byte)_feelers.size());
+        _feelers.add(f);
 
         f.Angle.setValue(new Random().nextDouble() * 2 * Math.PI);
         f.Length.setValue(Settings.CreatureSettings.InitialFeelerLength);
 
-        LinkFeeler(f);
+        linkFeeler(f);
     }
 
     // Fühler mit Gehirn verbinden
-    private void LinkFeeler(Feeler f){
-        brain.AddInput(f.NeuralInFeelsWater, false);
-        brain.AddInput(f.NeuralInEnergyValueFeeler, false);
-        brain.AddOutput(f.Angle, false);
-        brain.AddOutput(f.Length, true);
+    private void linkFeeler(Feeler f){
+        _brain.addInput(f.NeuralInFeelsWater, false);
+        _brain.addInput(f.NeuralInEnergyValueFeeler, false);
+        _brain.addOutput(f.Angle, false);
+        _brain.addOutput(f.Length, true);
     }
 
     // Fühler entfernen
-    private void RemoveFeeler(){
-        Feeler f = Feelers.get(Feelers.size() - 1);
-        Feelers.remove(f);
+    private void removeFeeler(){
+        Feeler f = _feelers.get(_feelers.size() - 1);
+        _feelers.remove(f);
 
-        brain.RemoveInput(f.NeuralInFeelsWater, false);
-        brain.RemoveInput(f.NeuralInEnergyValueFeeler, false);
-        brain.RemoveOutput(f.Angle, false);
-        brain.RemoveOutput(f.Length, true);
+        _brain.removeInput(f.NeuralInFeelsWater, false);
+        _brain.removeInput(f.NeuralInEnergyValueFeeler, false);
+        _brain.removeOutput(f.Angle, false);
+        _brain.removeOutput(f.Length, true);
     }
 
     // Umwelt der Kreatur wahrnehmen
-    public void Sense(){
+    public void sense(){
         // Energy
-        NeuralInEnergy.setValue((2 * Energy / Settings.CreatureSettings.BaseEnergy) - 1);
+        _neuralInEnergy.setValue((2 * _energy / Settings.CreatureSettings.BaseEnergy) - 1);
 
         // Age
-        NeuralInAge.setValue(Age / 60 - 1);
+        _neuralInAge.setValue(_age / 60 - 1);
 
-        Tile t = Population.getTile((int)PositionX, (int)PositionY);
+        Tile t = _population.getTile((int)_positionX, (int)_positionY);
 
         if (Settings.CreatureSettings.CanFeelOnBody){
             // EnergyOnCurrentTile
-            EnergyOnCurrentTile = t.Energy;
-            if (NeuralInEnergyOnCurrentTile != null)
-                NeuralInEnergyOnCurrentTile.setValue((2 * EnergyOnCurrentTile / Settings.SimulationSettings.MaxEnergyPerTile) - 1);
+            _energyOnCurrentTile = t.Energy;
+            if (_neuralInEnergyOnCurrentTile != null)
+                _neuralInEnergyOnCurrentTile.setValue((2 * _energyOnCurrentTile / Settings.SimulationSettings.MaxEnergyPerTile) - 1);
 
             // CurrentTileWater
-            CurrentTileWater = t.getType() == TileType.Water;
-            if (NeuralInCurrentTileWater != null)
-                NeuralInCurrentTileWater.setValue((CurrentTileWater ? 1d : -1d));
+            _currentTileWater = t.getType() == TileType.Water;
+            if (_neuralInCurrentTileWater != null)
+                _neuralInCurrentTileWater.setValue((_currentTileWater ? 1d : -1d));
         }
 
         // Feeler
-        for (Feeler feeler : Feelers) {
-            int feelsOnX = (int) (Math.round(PositionX + (Math.cos(feeler.Angle.getValue()) * feeler.Length.getValue()) / Settings.WorldSettings.TileSize));
-            int feelsOnY = (int) (Math.round(PositionY + (Math.sin(feeler.Angle.getValue()) * feeler.Length.getValue()) / Settings.WorldSettings.TileSize));
+        for (Feeler feeler : _feelers) {
+            int feelsOnX = (int) (Math.round(_positionX + (Math.cos(feeler.Angle.getValue()) * feeler.Length.getValue()) / Settings.WorldSettings.TileSize));
+            int feelsOnY = (int) (Math.round(_positionY + (Math.sin(feeler.Angle.getValue()) * feeler.Length.getValue()) / Settings.WorldSettings.TileSize));
 
-            t = Population.getTile(feelsOnX, feelsOnY);
+            t = _population.getTile(feelsOnX, feelsOnY);
 
             // Feeler.FeelsWater
             feeler.NeuralInFeelsWater.setValue((t.getType() == TileType.Water ? 1d : -1d));
 
             // Feeler.EnergyValueFeeler
-            feeler.NeuralInEnergyValueFeeler.setValue((2 * EnergyOnCurrentTile / Settings.SimulationSettings.MaxEnergyPerTile) - 1);
+            feeler.NeuralInEnergyValueFeeler.setValue((2 * _energyOnCurrentTile / Settings.SimulationSettings.MaxEnergyPerTile) - 1);
         }
     }
 
     // Entsprechend der Ausgänge des Gehirns reagieren
-    public void Act(double deltaTime) {
-        if (inhibit) {
-            inhibit = false;
+    public void act(double deltaTime) {
+        if (_inhibit) {
+            _inhibit = false;
             return;
         }
 
         // Age
-        Age += ((deltaTime / 1000));
+        _age += ((deltaTime / 1000));
 
         // Constant Energy Cost
-        Energy -= (Settings.CreatureSettings.EnergyDrainPerSecond * deltaTime / 1000);
-        Energy -= (Settings.CreatureSettings.AgeEnergyDrainPerSecond * SpecificAgingFactor * (Math.pow(Age, 2)) * deltaTime / 1000);
-        if (CurrentTileWater)
-            Energy -= (Settings.CreatureSettings.EnergyDrainOnWaterPerSecond * deltaTime / 1000);
+        _energy -= (Settings.CreatureSettings.EnergyDrainPerSecond * deltaTime / 1000);
+        _energy -= (Settings.CreatureSettings.AgeEnergyDrainPerSecond * _specificAgingFactor * (Math.pow(_age, 2)) * deltaTime / 1000);
+        if (_currentTileWater)
+            _energy -= (Settings.CreatureSettings.EnergyDrainOnWaterPerSecond * deltaTime / 1000);
 
         // Fat index
         // Je mehr Energie die Kreatur besitzt, desto mehr Energie verbraucht sie im Grundumsatz (vgl. Übergewicht)
-        if (Energy > Settings.CreatureSettings.BaseEnergy){
-            Energy -= ((1/Settings.CreatureSettings.AllowedFatness) * (Energy - Settings.CreatureSettings.BaseEnergy)) / 1000;
+        if (_energy > Settings.CreatureSettings.BaseEnergy){
+            _energy -= ((1/Settings.CreatureSettings.AllowedFatness) * (_energy - Settings.CreatureSettings.BaseEnergy)) / 1000;
         }
 
         // Eat
-        Energy += Population.Eat((int)PositionX, (int)PositionY, NeuralOutEat.getValue() * Settings.CreatureSettings.MaxEatPortionPerSecond * deltaTime / 1000);
+        _energy += _population.Eat((int)_positionX, (int)_positionY, _neuralOutEat.getValue() * Settings.CreatureSettings.MaxEatPortionPerSecond * deltaTime / 1000);
 
         // Rotation
-        Rotation += NeuralOutRotation.getValue() * Settings.CreatureSettings.RotationRangePerSecond / 1000;
+        _rotation += _neuralOutRotation.getValue() * Settings.CreatureSettings.RotationRangePerSecond / 1000;
 
         // Forward
         double move = Settings.CreatureSettings.MovingRangePerSecond * deltaTime / 1000;
-        Energy -=  (Settings.CreatureSettings.MovingEnergyDrainPerPixel * Math.abs(NeuralOutForward.getValue()) * move);
+        _energy -=  (Settings.CreatureSettings.MovingEnergyDrainPerPixel * Math.abs(_neuralOutForward.getValue()) * move);
 
-        double moveX = Math.cos(Rotation) * (NeuralOutForward.getValue() * move);
-        double moveY = Math.sin(Rotation) * (NeuralOutForward.getValue() * move);
+        double moveX = Math.cos(_rotation) * (_neuralOutForward.getValue() * move);
+        double moveY = Math.sin(_rotation) * (_neuralOutForward.getValue() * move);
 
-        PositionX += moveX;
-        PositionY += moveY;
+        _positionX += moveX;
+        _positionY += moveY;
 
         // Replication
-        if (Age >= Settings.CreatureSettings.ReplicationMinAge){
-            if (NeuralOutReplicate.getValue() > 0){
-                Energy -= Settings.CreatureSettings.EnergyDrainPerReplication;
+        if (_age >= Settings.CreatureSettings.ReplicationMinAge){
+            if (_neuralOutReplicate.getValue() > 0){
+                _energy -= Settings.CreatureSettings.EnergyDrainPerReplication;
 
-                if (Energy > 0)
-                    Replicate();
+                if (_energy > 0)
+                    replicate();
             }
         }
 
         // Feeler
-        Energy -= (Settings.CreatureSettings.EnergyDrainPerFeelerPerSecond * Feelers.size() * deltaTime / 1000);
+        _energy -= (Settings.CreatureSettings.EnergyDrainPerFeelerPerSecond * _feelers.size() * deltaTime / 1000);
 
-        for (Feeler f : Feelers){
+        for (Feeler f : _feelers){
             // Feeler.Angle
-            f.Angle.setValue(f.Angle.getValue() * 2 * Math.PI + NeuralOutRotation.getValue());
+            f.Angle.setValue(f.Angle.getValue() * 2 * Math.PI + _neuralOutRotation.getValue());
 
             // Feeler.Length
             f.Length.setValue(f.Length.getValue() * Settings.CreatureSettings.MaxFeelerLength);
             if (f.Length.getValue() < Settings.CreatureSettings.MinFeelerLength)
                 f.Length.setValue(Settings.CreatureSettings.MinFeelerLength);
 
-            Energy -= (Settings.CreatureSettings.EnergyDrainPerFeelerLengthPerSecond *
+            _energy -= (Settings.CreatureSettings.EnergyDrainPerFeelerLengthPerSecond *
                         Math.pow(f.Length.getValue() - Settings.CreatureSettings.MinFeelerLength,
                                 Settings.CreatureSettings.EnergyDrainPerFeelerLengthExponent) * deltaTime / 1000);
         }
 
-        if (Energy <= 0)
+        if (_energy <= 0)
             Destroy();
     }
 
     // Kreatur replizieren
-    private void Replicate(){
-        Population.AddCreature(new Creature(this));
+    private void replicate(){
+        _population.AddCreature(new Creature(this));
     }
 
     // Getter und Setter
-    public NeuralNetwork getBrain() { return brain; }
+    public NeuralNetwork getBrain() { return _brain; }
 
     public double getRotation(){
-        return Rotation;
+        return _rotation;
     }
     public void setRotation(double value){
-        Rotation = value;
+        _rotation = value;
     }
 
     public double getPositionY(){
-        return PositionY;
+        return _positionY;
     }
     public void setPositionY(double value){
-        PositionY = value;
+        _positionY = value;
     }
 
     public double getPositionX(){
-        return PositionX;
+        return _positionX;
     }
     public void setPositionX(double value){
-        PositionX = value;
+        _positionX = value;
     }
 
-    public int getPositionYi(){ return (int)PositionY; }
+    public int getPositionYi(){ return (int)_positionY; }
     public void setPositionYi(int value){
-        PositionY = value;
+        _positionY = value;
     }
 
     public int getPositionXi(){
-        return (int)PositionX;
+        return (int)_positionX;
     }
     public void setPositionXi(int value){
-        PositionX = value;
+        _positionX = value;
     }
 
     public double getEnergy(){
-        return Energy;
+        return _energy;
     }
     public void setEnergy(double value){
-        Energy = value;
+        _energy = value;
     }
 
     public double getAge() {
-        return Age;
+        return _age;
     }
     public void setAge(double age) {
-        Age = age;
+        _age = age;
     }
 
     public long getGeneration() {
-        return Generation;
+        return _generation;
     }
 
     public Vector3d getGenetics() {
-        return Genetics;
+        return _genetics;
     }
 
     public List<Feeler> getFeelers() {
-        return Feelers;
+        return _feelers;
     }
 
     public boolean isDestroyed() {
-        return destroyed;
+        return _destroyed;
     }
 
-    public boolean inhibits(){
-        return inhibit;
+    public boolean isInhibiting(){
+        return _inhibit;
     }
 
     public boolean getDraw(){
@@ -476,11 +476,11 @@ public class Creature {
 
     // Kreatur zerstören und Arbeitspeicher aufräumen
     private void Destroy() {
-        brain.Destroy();
-        Feelers.clear();
+        _brain.destroy();
+        _feelers.clear();
 
-        Population.RemoveCreature(this);
+        _population.RemoveCreature(this);
 
-        destroyed = true;
+        _destroyed = true;
     }
 }
